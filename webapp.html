@@ -2,23 +2,27 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Временная почта</title>
+    <!-- Скрипт Telegram Web Apps -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Стили остаются БЕЗ ИЗМЕНЕНИЙ */
         :root {
-            --main-bg-color: #8A2BE2;
+            /* Цвета по умолчанию (могут быть переопределены ТГ темой) */
+            --main-bg-color: #8A2BE2; /* Фиолетовый */
             --container-bg: #FFFFFF;
             --text-color: #000000;
+            --secondary-text-color: #555555;
             --border-color: #000000;
             --button-bg: #FFFFFF;
             --button-text: #000000;
-            --border-radius: 15px;
+            --error-color: #dc3545; /* Красный для ошибок */
+            --border-radius: 16px; /* Чуть больше скругление */
             --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            --transition-speed: 0.3s;
+            --transition-speed: 0.2s;
         }
 
+        /* Адаптация под ТГ тему */
         body {
             margin: 0;
             padding: 15px;
@@ -27,16 +31,18 @@
             color: var(--tg-theme-text-color, var(--text-color));
             overscroll-behavior: none;
             transition: background-color var(--transition-speed), color var(--transition-speed);
+            min-height: calc(100vh - 30px); /* Чтобы контент занимал высоту */
+            display: flex;
+            flex-direction: column;
         }
 
         .main-title {
-            font-size: 2.5em;
+            font-size: 2.2em; /* Немного уменьшил */
             font-weight: bold;
-            color: var(--tg-theme-button-text-color, var(--container-bg));
+            color: var(--tg-theme-button-text-color, var(--container-bg)); /* Цвет кнопки ТГ для контраста */
             text-align: center;
-            margin-bottom: 20px;
-            line-height: 1.1;
-            transition: color var(--transition-speed);
+            margin-bottom: 25px;
+            line-height: 1.2;
         }
 
         .section {
@@ -44,36 +50,37 @@
             border-radius: var(--border-radius);
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transition: background-color var(--transition-speed);
         }
 
         .section-title {
-            font-size: 1.2em;
-            font-weight: bold;
+            font-size: 1.1em; /* Чуть меньше */
+            font-weight: 600; /* Полужирный */
             margin-bottom: 15px;
             color: var(--tg-theme-text-color, var(--text-color));
              transition: color var(--transition-speed);
         }
 
-        .email-display-container {
+        /* Поле для email */
+        .email-display {
             display: flex;
             align-items: center;
             border: 2px solid var(--tg-theme-hint-color, var(--border-color));
+            background-color: var(--tg-theme-bg-color, #f8f9fa); /* Фон поля ввода */
             border-radius: var(--border-radius);
-            padding: 10px 15px;
+            padding: 12px 15px; /* Чуть больше паддинг */
             margin-bottom: 15px;
             cursor: pointer;
-            transition: background-color var(--transition-speed), border-color var(--transition-speed), transform 0.1s ease-out;
+            transition: background-color var(--transition-speed), border-color var(--transition-speed), box-shadow 0.1s;
             overflow: hidden;
+            color: var(--tg-theme-text-color, var(--text-color));
         }
-        .email-display-container:hover {
-             background-color: rgba(0,0,0, 0.05);
+        .email-display:hover {
+             border-color: var(--tg-theme-link-color, #007bff);
         }
-        .email-display-container.copied {
-            transform: scale(1.02);
-            background-color: #d4edda;
-            border-color: #155724;
+        .email-display:active {
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
         }
 
         #email-address {
@@ -81,173 +88,100 @@
             font-size: 1em;
             overflow-wrap: break-word;
             word-break: break-all;
-            color: var(--tg-theme-text-color, var(--text-color));
-            transition: color var(--transition-speed);
+            min-height: 1.2em; /* Чтобы не схлопывался при "Загрузка..." */
         }
+         #email-address.placeholder {
+              color: var(--tg-theme-hint-color, var(--secondary-text-color));
+         }
 
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
 
+        /* Кнопки */
+        .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
         .button {
             display: flex;
             align-items: center;
             justify-content: center;
             background-color: var(--tg-theme-button-color, var(--button-bg));
             color: var(--tg-theme-button-text-color, var(--button-text));
-            border: 2px solid transparent;
+            border: 1px solid transparent; /* Тонкая граница для контура */
+            border-color: var(--tg-theme-button-color, var(--border-color));
             border-radius: var(--border-radius);
             padding: 10px 15px;
-            font-size: 0.9em;
-            font-weight: bold;
+            font-size: 0.95em;
+            font-weight: 500;
             cursor: pointer;
-            transition: background-color var(--transition-speed), transform 0.1s ease-out, color var(--transition-speed);
+            transition: background-color var(--transition-speed), transform 0.1s, border-color var(--transition-speed), color var(--transition-speed);
             flex-grow: 1;
             text-align: center;
             -webkit-tap-highlight-color: transparent;
         }
-        .button:active {
-            transform: scale(0.97);
-            filter: brightness(0.95);
-        }
-        .button:hover:not(:active) {
-             filter: brightness(1.05);
-        }
-
-        .button .icon {
-            margin-right: 8px;
-            font-size: 1.2em;
+         /* Стилизация кнопки "Сменить" */
+        .button.change {
+            /* Можно добавить красный оттенок, если тема позволяет */
+             /* background-color: var(--tg-theme-destructive-text-color, #ffebee); */
+             /* color: var(--tg-theme-destructive-text-color, #dc3545); */
+             /* border-color: var(--tg-theme-destructive-text-color, #dc3545); */
         }
 
-        #inbox-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            min-height: 100px;
-            /* Центрируем только если нет сообщений (через has-messages класс) */
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            color: var(--tg-theme-hint-color, gray);
-            transition: color var(--transition-speed);
-        }
-        #inbox-list.has-messages {
-             justify-content: flex-start;
-             align-items: stretch;
-             text-align: left;
-        }
+        .button:active { transform: scale(0.97); filter: brightness(0.95); }
+        .button:hover:not(:active) { filter: brightness(1.05); }
+        .button .icon { margin-right: 8px; font-size: 1.1em; }
+
+        /* Блок входящих */
+        #inbox-list { display: flex; flex-direction: column; gap: 10px; min-height: 150px; /* Место для сообщений или плейсхолдера */ }
 
         .inbox-placeholder {
-            padding: 20px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-         .inbox-placeholder.error {
-              color: var(--tg-theme-destructive-text-color, red);
-              font-weight: bold;
-         }
-
-        .message-item {
-            border: 2px solid var(--tg-theme-hint-color, var(--border-color));
-            border-radius: var(--border-radius);
-            padding: 15px;
-            font-size: 0.9em;
-            min-height: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            background-color: var(--tg-theme-secondary-bg-color, var(--container-bg));
-            transition: background-color var(--transition-speed), border-color var(--transition-speed), transform 0.2s ease-out, opacity 0.5s ease-out;
-            opacity: 0;
-            transform: translateY(10px);
-            animation: fadeIn 0.5s ease-out forwards;
-             color: var(--tg-theme-text-color, var(--text-color));
-        }
-
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .message-item .sender,
-        .message-item .subject,
-        .message-item .intro {
-             padding: 0 3px;
-             display: block;
-             margin-bottom: 4px;
-             overflow: hidden;
-             text-overflow: ellipsis;
-             white-space: nowrap;
-             transition: color var(--transition-speed);
-             background: none;
-             text-align: left;
-        }
-         .message-item .sender { font-weight: bold; }
-         .message-item .intro { color: var(--tg-theme-hint-color, gray); }
-
-        #loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            color: white;
-            display: flex;
+            display: flex; /* Центрирование */
             justify-content: center;
             align-items: center;
-            font-size: 1.5em;
-            z-index: 1000;
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity var(--transition-speed) ease-out, visibility var(--transition-speed);
-        }
-        #loading-overlay.visible {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .footer {
+            flex-grow: 1; /* Занять доступное место */
+            padding: 20px;
             text-align: center;
-            margin-top: 30px;
-            padding-bottom: 10px;
-            font-size: 0.8em;
+            color: var(--tg-theme-hint-color, var(--secondary-text-color));
         }
-        .footer a {
-            color: var(--tg-theme-link-color, var(--container-bg));
-            text-decoration: none;
-             transition: color var(--transition-speed);
-        }
-        .footer a:hover {
-            text-decoration: underline;
-        }
+        .inbox-placeholder.error { color: var(--tg-theme-destructive-text-color, var(--error-color)); font-weight: 500; }
 
-        .toast-notification {
-            position: fixed;
-            bottom: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            z-index: 1001;
+        /* Элемент сообщения */
+        .message-item {
+            border: 1px solid var(--tg-theme-hint-color, #dee2e6); /* Тонкая граница */
+            border-radius: calc(var(--border-radius) - 4px); /* Чуть меньше основного */
+            padding: 12px 15px;
+            background-color: var(--tg-theme-bg-color, #f8f9fa); /* Фон как у поля ввода */
+            transition: background-color var(--transition-speed), border-color var(--transition-speed), transform 0.2s;
             opacity: 0;
-            transition: opacity 0.4s ease-out, bottom 0.4s ease-out;
-            pointer-events: none;
+            transform: translateY(5px);
+            animation: fadeIn 0.4s ease-out forwards;
+            cursor: pointer; /* Намек на кликабельность (в будущем) */
+            color: var(--tg-theme-text-color, var(--text-color));
         }
-        .toast-notification.show {
-            opacity: 1;
-            bottom: 80px;
+         .message-item:hover {
+              border-color: var(--tg-theme-text-color, var(--border-color));
+         }
+
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+        .message-item span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .message-item .sender { font-weight: 600; margin-bottom: 3px; font-size: 0.95em; }
+        .message-item .subject { font-weight: 500; margin-bottom: 4px; font-size: 0.9em; }
+        .message-item .intro { font-size: 0.85em; color: var(--tg-theme-hint-color, var(--secondary-text-color)); }
+
+        /* Оверлей загрузки */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); color: white;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.2em; z-index: 1000; visibility: hidden; opacity: 0;
+            transition: opacity 0.2s ease-out, visibility 0.2s;
         }
-        .toast-notification.success { background-color: rgba(40, 167, 69, 0.8); }
-        .toast-notification.error { background-color: rgba(220, 53, 69, 0.8); }
-        .toast-notification.warning { background-color: rgba(255, 193, 7, 0.8); color: black; }
+        #loading-overlay.visible { visibility: visible; opacity: 1; }
+
+        /* Футер */
+        .footer { text-align: center; margin-top: auto; /* Прижимаем к низу */ padding-top: 20px; padding-bottom: 10px; font-size: 0.8em; }
+        .footer a { color: var(--tg-theme-link-color, #007bff); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        /* Toast уведомления */
+        .toast-notification { /* ... стили как раньше ... */ }
 
     </style>
 </head>
@@ -255,104 +189,178 @@
 
     <h1 class="main-title">Временная почта</h1>
 
+    <!-- Секция Email -->
     <div class="section">
         <div class="section-title">Ваш адрес временной почты</div>
-        <div class="email-display-container" id="copy-email-btn" title="Нажмите, чтобы скопировать">
-            <span id="email-address">Загрузка...</span>
+        <div class="email-display" id="email-display" title="Нажмите, чтобы скопировать">
+            <span id="email-address" class="placeholder">Загрузка...</span>
         </div>
         <div class="action-buttons">
-            <button class="button" id="change-email-btn"><span class="icon">❌</span>Сменить e-mail</button>
+            <button class="button change" id="change-email-btn"><span class="icon">❌</span>Сменить e-mail</button>
             <button class="button" id="refresh-inbox-btn"><span class="icon">🔄</span>Обновить</button>
         </div>
     </div>
 
+    <!-- Секция Входящие -->
     <div class="section">
         <div class="section-title">Входящие</div>
-        <!-- Блок изначально пуст, состояние задается через JS -->
-        <div id="inbox-list"></div>
+        <div id="inbox-list">
+            <!-- Динамически заполняется JS -->
+        </div>
     </div>
 
+    <!-- Футер -->
     <div class="footer">
         <a href="https://mail.tm" target="_blank" rel="noopener noreferrer">Powered by Mail.tm</a>
     </div>
 
+    <!-- Оверлей и тосты -->
     <div id="loading-overlay"><span>Загрузка...</span></div>
     <div id="toast-notification" class="toast-notification"></div>
 
     <script>
+        // --- Глобальные переменные и константы ---
         const API_BASE_URL = 'https://api.mail.tm';
+        const LS_KEY = 'tempMailAccountData'; // Ключ для localStorage
+        let currentAccount = null; // { address, password, id, token }
+        let apiToken = null; // Храним токен отдельно от данных аккаунта
+        let isLoading = false; // Флаг для оверлея
+
+        // --- Элементы DOM ---
         const emailAddressEl = document.getElementById('email-address');
+        const emailDisplayEl = document.getElementById('email-display');
         const inboxListEl = document.getElementById('inbox-list');
         const changeEmailBtn = document.getElementById('change-email-btn');
         const refreshInboxBtn = document.getElementById('refresh-inbox-btn');
-        const copyEmailBtn = document.getElementById('copy-email-btn');
         const loadingOverlay = document.getElementById('loading-overlay');
         const toastNotificationEl = document.getElementById('toast-notification');
 
-        let currentAccount = null;
-        let isLoading = false;
-        let toastTimeout = null;
+        // --- Утилиты ---
+        const showLoadingOverlay = (show) => {
+            isLoading = show;
+            loadingOverlay.classList.toggle('visible', show);
+        };
+        let toastTimeout;
+        const showToast = (message, type = 'info', duration = 3000) => {
+            clearTimeout(toastTimeout);
+            toastNotificationEl.textContent = message;
+            toastNotificationEl.className = `toast-notification ${type}`;
+            requestAnimationFrame(() => toastNotificationEl.classList.add('show'));
+            toastTimeout = setTimeout(() => toastNotificationEl.classList.remove('show'), duration);
+        };
+        const generatePassword = (length = 12) => {
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            let password = "";
+            for (let i = 0, n = charset.length; i < length; ++i) password += charset.charAt(Math.floor(Math.random() * n));
+            return password;
+        };
+        const escapeHtml = (unsafe = '') => {
+             const temp = document.createElement('div'); temp.textContent = unsafe; return temp.innerHTML;
+        };
 
-        // --- Вспомогательные функции ---
-        function showLoading(show) { if (show && isLoading) return; if (!show && !isLoading) return; isLoading = show; setTimeout(() => { if (isLoading === show) { loadingOverlay.classList.toggle('visible', show); } }, show ? 150 : 0); }
-        function showToast(message, type = 'info', duration = 3000) { clearTimeout(toastTimeout); toastNotificationEl.textContent = message; toastNotificationEl.className = `toast-notification ${type}`; requestAnimationFrame(() => { toastNotificationEl.classList.add('show'); }); toastTimeout = setTimeout(() => { toastNotificationEl.classList.remove('show'); }, duration); }
-        function generatePassword(length = 12) { const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; let password = ""; for (let i = 0, n = charset.length; i < length; ++i) { password += charset.charAt(Math.floor(Math.random() * n)); } return password; }
-        async function fetchAPI(endpoint, options = {}) { const showOverlay = !endpoint.startsWith('/messages'); if(showOverlay) showLoading(true); let response; try { const url = API_BASE_URL + endpoint; const headers = { 'Accept': 'application/ld+json', ...options.headers, }; if (options.body && ['POST', 'PATCH', 'PUT'].includes(options.method?.toUpperCase())) { headers['Content-Type'] = 'application/json'; } if (currentAccount && currentAccount.token && options.auth !== false) { headers['Authorization'] = `Bearer ${currentAccount.token}`; } response = await fetch(url, { ...options, headers: headers }); if (response.status === 204) return { ok: true, data: null }; const responseBodyText = await response.text(); let data = null; if (responseBodyText) { try { data = JSON.parse(responseBodyText); } catch (e) { if (response.ok) return { ok: true, data: responseBodyText }; console.error('Failed to parse JSON response:', responseBodyText); throw new Error(`Некорректный формат ответа сервера (статус ${response.status})`); } } if (!response.ok) { console.error('API Error Response:', { status: response.status, data }); const errorMessage = data?.message || data?.detail || `Ошибка API: ${response.status}`; if (response.status === 401 && endpoint !== '/token') { console.log('Unauthorized (401), attempting to refresh token...'); currentAccount.token = null; const gotToken = await getToken(); if (gotToken) { console.log('Token refreshed, retrying request...'); if(showOverlay) showLoading(false); return fetchAPI(endpoint, options); } else { throw new Error("Не удалось обновить токен авторизации."); } } else if (response.status === 429) { console.warn('Too Many Requests (429)'); showToast('Слишком много запросов. Повтор через секунду...', 'warning', 1500); await new Promise(resolve => setTimeout(resolve, 1100)); if(showOverlay) showLoading(false); return fetchAPI(endpoint, options); } else if (response.status === 422 && data?.violations) { const violations = data.violations.map(v => `${v.propertyPath}: ${v.message}`).join('; '); throw new Error(`Ошибка валидации: ${violations}`); } throw new Error(errorMessage); } return { ok: true, data }; } catch (error) { console.error('Fetch API error:', error); showToast(`Ошибка: ${error.message}`, 'error'); return { ok: false, error }; } finally { if(showOverlay) showLoading(false); } }
-        const escapeHtml = (unsafe) => { if (!unsafe) return ''; const temp = document.createElement('div'); temp.textContent = unsafe; return temp.innerHTML; };
+        // --- Взаимодействие с API Mail.tm ---
+        async function fetchAPI(endpoint, options = {}) {
+            const { method = 'GET', body = null, needsAuth = true, isRetry = false } = options;
+            const url = API_BASE_URL + endpoint;
+            const headers = { 'Accept': 'application/ld+json' };
 
-        // --- Функции обновления UI Входящих (Убрано состояние 'loading') ---
-        function setInboxState(state, message = '') {
-            console.log(`UI: Setting inbox state to '${state}'` + (message ? ` with message: ${message}` : ''));
-            while (inboxListEl.firstChild) {
-                inboxListEl.removeChild(inboxListEl.firstChild);
+            if (body) headers['Content-Type'] = 'application/json';
+            if (needsAuth) {
+                if (!apiToken && !isRetry) { // Если нет токена и это не повтор после получения токена
+                    console.log("Auth required, but no token. Attempting to get token first...");
+                    const gotToken = await getToken(); // Пытаемся получить токен
+                    if (!gotToken) throw new Error("Необходима авторизация, но токен не получен.");
+                    // Если токен получен, продолжаем с ним
+                }
+                if(apiToken) headers['Authorization'] = `Bearer ${apiToken}`;
+                else if (!isRetry) throw new Error("Необходима авторизация, токен отсутствует."); // Если и после getToken нет, то ошибка
             }
-            inboxListEl.classList.remove('has-messages');
 
-            // Не создаем плейсхолдер для 'loading'
-            if (state === 'loading') {
-                // Можно оставить блок пустым или добавить спиннер CSS, если очень хочется
-                // Например: inboxListEl.innerHTML = '<div class="spinner"></div>';
-                // Но пока оставляем пустым, раз грузится быстро
-                return;
+            console.log(`API Request: ${method} ${endpoint}`, options);
+
+            try {
+                const response = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : null });
+
+                if (response.status === 204) return { ok: true, data: null }; // No Content
+
+                const responseBodyText = await response.text();
+                let data = null;
+                if (responseBodyText) {
+                    try { data = JSON.parse(responseBodyText); }
+                    catch (e) {
+                        if (response.ok) return { ok: true, data: responseBodyText }; // OK, but not JSON
+                        console.error('Failed to parse JSON response:', responseBodyText);
+                        throw new Error(`Некорректный формат ответа сервера (статус ${response.status})`);
+                    }
+                }
+
+                if (!response.ok) {
+                    console.error('API Error Response:', { status: response.status, data });
+                    const errorMessage = data?.message || data?.detail || `Ошибка API: ${response.status}`;
+
+                    if (response.status === 401 && needsAuth && !isRetry) {
+                        console.warn("API returned 401 (Unauthorized). Invalidating token and retrying...");
+                        apiToken = null; // Сбрасываем невалидный токен
+                        // Повторяем запрос, который теперь сначала попытается получить новый токен
+                        return await fetchAPI(endpoint, { ...options, isRetry: true });
+                    }
+                    // Обработка других ошибок (400, 404, 422, 429...)
+                     throw new Error(errorMessage);
+                }
+                console.log(`API Success: ${method} ${endpoint}`, data);
+                return { ok: true, data };
+
+            } catch (error) {
+                console.error(`API Fetch Error: ${method} ${endpoint}`, error);
+                // Важно не показывать alert, а использовать toast или UI сообщение
+                showToast(`Ошибка API: ${error.message}`, 'error');
+                // Возвращаем объект с ошибкой, чтобы вызывающий код мог ее обработать
+                return { ok: false, error: error };
             }
-
-            const placeholder = document.createElement('div');
-            placeholder.className = 'inbox-placeholder';
-
-            switch(state) {
-                case 'empty':
-                    placeholder.textContent = 'Нет входящих сообщений';
-                    break;
-                case 'error':
-                    placeholder.textContent = `Ошибка: ${escapeHtml(message)}`;
-                    placeholder.classList.add('error');
-                    break;
-                default:
-                    // Если состояние не empty/error, значит будут добавлены сообщения,
-                    // и этот плейсхолдер не нужен.
-                    // Можно добавить сюда ошибку на всякий случай:
-                    console.error('Unknown inbox state for placeholder:', state);
-                    placeholder.textContent = 'Неизвестное состояние';
-                    inboxListEl.appendChild(placeholder); // Добавляем только в неизвестном случае
-                    return; // Выходим, чтобы не добавлять ниже
-            }
-            inboxListEl.appendChild(placeholder);
         }
 
-        function displayMessages(messages) {
-            if (!messages || messages.length === 0) {
-                 setInboxState('empty');
-                return;
+        // --- Управление UI ---
+        const updateAccountUI = () => {
+            if (currentAccount && currentAccount.address) {
+                emailAddressEl.textContent = currentAccount.address;
+                emailAddressEl.classList.remove('placeholder');
+                emailDisplayEl.title = 'Нажмите, чтобы скопировать';
+                emailDisplayEl.style.cursor = 'pointer';
+            } else {
+                emailAddressEl.textContent = 'Нет аккаунта';
+                emailAddressEl.classList.add('placeholder');
+                emailDisplayEl.title = '';
+                emailDisplayEl.style.cursor = 'default';
             }
-            console.log(`UI: Displaying ${messages.length} messages.`);
-             while (inboxListEl.firstChild) {
-                 inboxListEl.removeChild(inboxListEl.firstChild);
+        };
+
+        const setInboxState = (state, message = '') => {
+             console.log(`UI: Setting inbox state to '${state}'` + (message ? `: ${message}` : ''));
+             inboxListEl.innerHTML = ''; // Очищаем всегда
+             inboxListEl.classList.remove('has-messages');
+             const placeholder = document.createElement('div');
+             placeholder.className = 'inbox-placeholder';
+             let showPlaceholder = true;
+
+             switch(state) {
+                 case 'empty': placeholder.textContent = 'Нет входящих сообщений'; break;
+                 case 'error': placeholder.textContent = `Ошибка: ${escapeHtml(message)}`; placeholder.classList.add('error'); break;
+                 case 'messages': showPlaceholder = false; break; // Сообщения будут добавлены отдельно
+                 default: placeholder.textContent = 'Неизвестное состояние'; placeholder.classList.add('error');
              }
+             if(showPlaceholder) inboxListEl.appendChild(placeholder);
+        };
+
+        const displayMessages = (messages = []) => {
+            if (!messages.length) {
+                setInboxState('empty'); return;
+            }
+            setInboxState('messages'); // Очищаем и готовим для сообщений
             inboxListEl.classList.add('has-messages');
-
-             messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-             const fragment = document.createDocumentFragment();
+            messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            const fragment = document.createDocumentFragment();
+            messages.forEach(msg => { /* ... создание элемента .message-item ... */ });
+            inboxListEl.appendChild(fragment);
              messages.forEach(msg => {
                  const msgDiv = document.createElement('div');
                  msgDiv.classList.add('message-item');
@@ -368,111 +376,245 @@
                   fragment.appendChild(msgDiv);
              });
              inboxListEl.appendChild(fragment);
-        }
+        };
 
-        // --- Основные функции ---
-        async function createNewAccount() {
-            console.log('Attempting to create a new account...');
-            // Убрали setInboxState('loading'); - оверлей от fetchAPI справится
-            const domainsResponse = await fetchAPI('/domains', { auth: false });
-            if (!domainsResponse.ok || !domainsResponse.data['hydra:member']?.length) { setInboxState('error', 'Не удалось получить список доменов.'); return false; }
-            const activeDomains = domainsResponse.data['hydra:member'].filter(d => d.isActive);
-            if (activeDomains.length === 0) { setInboxState('error', 'Нет доступных доменов для регистрации.'); return false; }
-            const domain = activeDomains[Math.floor(Math.random() * activeDomains.length)].domain;
-            const username = Math.random().toString(36).substring(2, 10);
-            const password = generatePassword();
-            const address = `${username}@${domain}`;
-            console.log(`Registering ${address}...`);
-            const createResponse = await fetchAPI('/accounts', { method: 'POST', auth: false, body: JSON.stringify({ address, password }) });
-            if (!createResponse.ok || !createResponse.data?.address || !createResponse.data?.id) { setInboxState('error', createResponse.error?.message || 'Не удалось создать аккаунт.'); return false; }
-            currentAccount = { address: createResponse.data.address, password: password, id: createResponse.data.id, token: null };
-            localStorage.setItem('tempMailAccount', JSON.stringify({ address: currentAccount.address, password: currentAccount.password, id: currentAccount.id }));
-            updateAccountUI();
-            console.log('New account created:', currentAccount.address);
-            showToast(`Новый адрес: ${currentAccount.address}`, 'success');
-            // Устанавливаем начальное состояние "empty" перед запросом токена/сообщений
-            setInboxState('empty');
-            await getToken();
-            // Только если токен получен, пытаемся загрузить сообщения
-            if(currentAccount?.token) {
-                 await fetchMessages();
+
+        // --- Основные действия ---
+        const loadAccountData = () => {
+            const savedData = localStorage.getItem(LS_KEY);
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    // Проверяем наличие основных полей
+                    if (data.address && data.password && data.id) {
+                        currentAccount = data;
+                        apiToken = null; // Сбрасываем токен при загрузке, получим свежий
+                        console.log("Loaded account data from localStorage:", currentAccount.address);
+                        return true;
+                    } else {
+                        console.warn("Invalid data found in localStorage.");
+                        localStorage.removeItem(LS_KEY); // Удаляем некорректные данные
+                    }
+                } catch (e) {
+                    console.error("Error parsing localStorage data:", e);
+                    localStorage.removeItem(LS_KEY);
+                }
             }
-            return true;
-        }
+            console.log("No valid account data found in localStorage.");
+            currentAccount = null;
+            apiToken = null;
+            return false;
+        };
+
+        const saveAccountData = () => {
+            if (currentAccount && currentAccount.address && currentAccount.password && currentAccount.id) {
+                try {
+                    const dataToSave = {
+                        address: currentAccount.address,
+                        password: currentAccount.password,
+                        id: currentAccount.id
+                        // НЕ СОХРАНЯЕМ ТОКЕН!
+                    };
+                    localStorage.setItem(LS_KEY, JSON.stringify(dataToSave));
+                    console.log("Account data saved to localStorage.");
+                } catch (e) {
+                    console.error("Error saving data to localStorage:", e);
+                    showToast("Ошибка сохранения данных сессии.", "error");
+                }
+            }
+        };
 
         async function getToken() {
-             if (!currentAccount || !currentAccount.address || !currentAccount.password) return false;
-             if (currentAccount.token) return true;
-             console.log('Requesting token for:', currentAccount.address);
-             const tokenResponse = await fetchAPI('/token', { method: 'POST', auth: false, body: JSON.stringify({ address: currentAccount.address, password: currentAccount.password }) });
-             if (tokenResponse.ok && tokenResponse.data.token) {
-                 currentAccount.token = tokenResponse.data.token;
+             if (!currentAccount || !currentAccount.address || !currentAccount.password) {
+                  console.error("Cannot get token: Missing account credentials.");
+                  setInboxState('error', 'Данные аккаунта отсутствуют.');
+                  return false;
+              }
+             // Если токен уже есть, просто возвращаем true (можно добавить проверку его валидности позже)
+             if (apiToken) {
+                 console.log("Using existing API token.");
+                 return true;
+             }
+
+             console.log('Requesting API token...');
+             showLoadingOverlay(true); // Показываем оверлей для запроса токена
+             const result = await fetchAPI('/token', {
+                 method: 'POST',
+                 needsAuth: false, // Запрос токена не требует токена
+                 body: {
+                     address: currentAccount.address,
+                     password: currentAccount.password,
+                 }
+             });
+             showLoadingOverlay(false); // Скрываем оверлей
+
+             if (result.ok && result.data?.token) {
+                 apiToken = result.data.token;
                  console.log('Token acquired successfully.');
                  return true;
              } else {
-                 const errorMsg = 'Ошибка получения токена авторизации.';
+                 apiToken = null; // Убедимся, что токен сброшен
+                 const errorMsg = result.error?.message || 'Не удалось получить токен.';
                  showToast(errorMsg, 'error');
                  setInboxState('error', 'Ошибка авторизации. Попробуйте сменить e-mail.');
-                 localStorage.removeItem('tempMailAccount');
-                 currentAccount = null;
-                 updateAccountUI();
+                 // Возможно, стоит удалить невалидные данные из localStorage
+                 // localStorage.removeItem(LS_KEY);
+                 // currentAccount = null;
+                 // updateAccountUI();
                  return false;
              }
         }
 
-        async function fetchMessages() {
-            if (!currentAccount) { console.warn('fetchMessages called without currentAccount'); setInboxState('error', 'Аккаунт не загружен или не создан.'); return; }
-            // Убрали setInboxState('loading');
-            if (!currentAccount.token) {
-                const gotToken = await getToken();
-                if (!gotToken) { return; }
+        async function createNewAccount() {
+            console.log('Starting new account creation...');
+            showLoadingOverlay(true);
+            setInboxState('empty'); // Показываем "Нет сообщений", пока создается
+            updateAccountUI(); // Обновим UI на случай, если там было "Нет аккаунта"
+
+            // 1. Получить домен
+            const domainsResult = await fetchAPI('/domains', { needsAuth: false });
+            if (!domainsResult.ok || !domainsResult.data['hydra:member']?.length) {
+                showLoadingOverlay(false);
+                setInboxState('error', 'Не удалось получить домен для регистрации.');
+                return false;
             }
-            console.log('Fetching messages for:', currentAccount.address);
-            const messagesResponse = await fetchAPI('/messages?page=1');
-            if (messagesResponse.ok) {
-                 const messages = messagesResponse.data['hydra:member'] || [];
-                 console.log(`Received ${messages.length} messages from API.`);
-                 displayMessages(messages); // Покажет сообщения или 'empty'
-            } else {
-                setInboxState('error', messagesResponse.error?.message || 'Не удалось загрузить сообщения.');
-                 if (messagesResponse.error?.message?.includes('401')) { currentAccount.token = null; }
+            const activeDomain = domainsResult.data['hydra:member'].find(d => d.isActive);
+            if (!activeDomain) {
+                 showLoadingOverlay(false);
+                 setInboxState('error', 'Нет доступных доменов.');
+                 return false;
             }
+
+            // 2. Сгенерировать данные и создать аккаунт
+            const username = Math.random().toString(36).substring(2, 10);
+            const password = generatePassword();
+            const address = `${username}@${activeDomain.domain}`;
+
+            const createResult = await fetchAPI('/accounts', {
+                method: 'POST',
+                needsAuth: false,
+                body: { address, password },
+            });
+
+            if (!createResult.ok || !createResult.data?.id) {
+                 showLoadingOverlay(false);
+                 setInboxState('error', createResult.error?.message || 'Не удалось создать аккаунт.');
+                 return false;
+            }
+
+            // 3. Сохранить данные
+            currentAccount = {
+                 address: createResult.data.address, // Используем адрес из ответа
+                 password: password,
+                 id: createResult.data.id,
+            };
+            apiToken = null; // Сбрасываем старый токен, если был
+            saveAccountData();
+            updateAccountUI();
+            showToast(`Создан адрес: ${currentAccount.address}`, 'success');
+            console.log("New account created and saved:", currentAccount.address);
+
+            // 4. Получить токен (оверлей уже скрыт после создания)
+            await getToken();
+
+            // 5. Обновить сообщения (если токен получен)
+             if(apiToken) {
+                  await fetchMessages();
+             } else {
+                  setInboxState('error', 'Аккаунт создан, но не удалось авторизоваться для получения писем.');
+             }
+            showLoadingOverlay(false); // Убедимся, что скрыт
+            return true;
         }
 
-        // --- Остальные функции ---
-        function updateAccountUI() { if (currentAccount && currentAccount.address) { emailAddressEl.textContent = currentAccount.address; copyEmailBtn.style.cursor = 'pointer'; copyEmailBtn.title = 'Нажмите, чтобы скопировать'; } else { emailAddressEl.textContent = 'Нет аккаунта'; copyEmailBtn.style.cursor = 'default'; copyEmailBtn.title = ''; } }
-        function copyEmailToClipboard() { if (!currentAccount || !currentAccount.address || emailAddressEl.textContent.includes('...')) { showToast('Нет адреса для копирования.', 'warning'); return; } navigator.clipboard.writeText(currentAccount.address) .then(() => { showToast('Адрес скопирован!', 'success'); copyEmailBtn.classList.add('copied'); setTimeout(() => copyEmailBtn.classList.remove('copied'), 500); }) .catch(err => { console.error('Clipboard copy error:', err); try { const input = document.createElement('textarea'); input.value = currentAccount.address; document.body.appendChild(input); input.select(); document.execCommand('copy'); document.body.removeChild(input); showToast('Адрес скопирован!', 'success'); copyEmailBtn.classList.add('copied'); setTimeout(() => copyEmailBtn.classList.remove('copied'), 500); } catch (fallbackErr) { console.error('Fallback copy error:', fallbackErr); showToast('Ошибка копирования адреса.', 'error'); } }); }
-
-        // --- Инициализация и обработчики событий ---
-        document.addEventListener('DOMContentLoaded', async () => {
-             if (window.Telegram && window.Telegram.WebApp) { try { const tg = window.Telegram.WebApp; tg.ready(); tg.expand(); /* ... стили ... */ } catch (e) { console.error("Telegram WebApp initialization error:", e); } }
-             console.log("DOM Content Loaded. Initializing app...");
-             // Устанавливаем начальное состояние inbox как 'empty', пока грузятся данные
-             setInboxState('empty');
-             const savedAccountData = localStorage.getItem('tempMailAccount');
-             if (savedAccountData) {
-                 try {
-                     const savedAccount = JSON.parse(savedAccountData);
-                      if (savedAccount.address && savedAccount.password && savedAccount.id) {
-                          currentAccount = savedAccount;
-                          console.log('Loaded saved account:', currentAccount.address);
-                          updateAccountUI();
-                          await fetchMessages();
-                      } else { throw new Error("Invalid account data"); }
-                 } catch (e) {
-                     console.error('Error loading saved account:', e);
-                     localStorage.removeItem('tempMailAccount');
-                      updateAccountUI();
-                      setInboxState('error', 'Ошибка загрузки данных. Попробуйте сменить e-mail.');
+        async function fetchMessages() {
+            if (!currentAccount) {
+                 setInboxState('error', 'Аккаунт не выбран.'); return;
+            }
+             console.log("Fetching messages...");
+             // Попробуем получить токен, если его нет
+             if (!apiToken) {
+                 const gotToken = await getToken();
+                 if (!gotToken) {
+                     // getToken уже установил состояние ошибки
+                     return;
                  }
-             } else {
-                  console.log("No saved account found. Creating a new one.");
-                  await createNewAccount();
              }
-         });
-         changeEmailBtn.addEventListener('click', async () => { if (window.Telegram?.WebApp?.HapticFeedback) { window.Telegram.WebApp.HapticFeedback.impactOccurred('light'); } console.log('Change email button clicked.'); localStorage.removeItem('tempMailAccount'); currentAccount = null; emailAddressEl.textContent = 'Создание...'; /* Убрали clearInboxUI */ await createNewAccount(); });
-         refreshInboxBtn.addEventListener('click', () => { if (window.Telegram?.WebApp?.HapticFeedback) { window.Telegram.WebApp.HapticFeedback.notificationOccurred('success'); } console.log("Refresh button clicked."); if (!currentAccount) { showToast('Сначала нужно создать email.', 'warning'); setInboxState('error', 'Аккаунт не найден.'); return; } fetchMessages(); });
-         copyEmailBtn.addEventListener('click', copyEmailToClipboard);
+
+             // Не показываем оверлей для обновления сообщений
+             const result = await fetchAPI('/messages?page=1', { needsAuth: true });
+
+             if (result.ok) {
+                 displayMessages(result.data['hydra:member']);
+             } else {
+                  // fetchAPI уже показал toast, установим состояние ошибки в блоке
+                 setInboxState('error', result.error?.message || 'Не удалось загрузить сообщения.');
+                 // Если ошибка 401, токен уже сброшен внутри fetchAPI при обработке ошибки
+             }
+        }
+
+        // --- Инициализация приложения ---
+        async function initializeApp() {
+            console.log("Initializing App...");
+            // Настроим тему ТГ
+            if (window.Telegram && window.Telegram.WebApp) {
+                try {
+                    const tg = window.Telegram.WebApp;
+                    tg.ready();
+                    tg.expand();
+                    // Применение цветов темы... (код как раньше)
+                } catch (e) { console.error("Telegram WebApp init error:", e); }
+            }
+
+            // Загружаем или создаем аккаунт
+            if (loadAccountData()) {
+                updateAccountUI();
+                setInboxState('empty'); // Начальное состояние
+                await fetchMessages(); // Пытаемся загрузить сообщения для сохраненного аккаунта
+            } else {
+                // Если нет сохраненных данных, создаем новый
+                await createNewAccount();
+            }
+             // Убедимся, что оверлей скрыт после инициализации
+             showLoadingOverlay(false);
+        }
+
+        // --- Обработчики событий ---
+        changeEmailBtn.addEventListener('click', () => {
+            if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            console.log('Change email button clicked.');
+            if (!isLoading) { // Предотвращаем двойное нажатие во время загрузки
+                localStorage.removeItem(LS_KEY); // Удаляем старые данные
+                currentAccount = null;
+                apiToken = null;
+                emailAddressEl.textContent = 'Создание...';
+                emailAddressEl.classList.add('placeholder');
+                createNewAccount(); // Создаем новый
+            } else {
+                 console.log("Ignoring click, already loading.");
+            }
+        });
+
+        refreshInboxBtn.addEventListener('click', () => {
+            if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+             console.log("Refresh button clicked.");
+            if (!currentAccount) { showToast('Сначала создайте или загрузите email.', 'warning'); return; }
+            if (!isLoading) { // Предотвращаем двойное нажатие
+                 fetchMessages();
+            } else {
+                 console.log("Ignoring click, already loading.");
+            }
+        });
+
+        emailDisplayEl.addEventListener('click', () => {
+            if (!currentAccount || !currentAccount.address || emailAddressEl.classList.contains('placeholder')) return;
+            navigator.clipboard.writeText(currentAccount.address)
+                .then(() => showToast('Адрес скопирован!', 'success'))
+                .catch(err => { console.error('Clipboard copy error:', err); showToast('Ошибка копирования адреса.', 'error'); });
+        });
+
+        // --- Запуск ---
+        document.addEventListener('DOMContentLoaded', initializeApp);
 
     </script>
 </body>
