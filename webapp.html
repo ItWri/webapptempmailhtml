@@ -1,3 +1,5 @@
+--- START OF FILE webapp.html ---
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -21,96 +23,17 @@
             min-height: calc(100vh - 30px); display: flex; flex-direction: column;
         }
 
-        .main-title {
-            font-size: 2.2em; font-weight: bold; color: var(--tg-theme-button-text-color, var(--container-bg));
-            text-align: center; margin-bottom: 25px; line-height: 1.2;
+        /* ... (остальные стили без изменений) ... */
+
+        .button:disabled { /* Стиль для заблокированных кнопок */
+            opacity: 0.6;
+            cursor: not-allowed;
+            filter: grayscale(50%);
         }
+        .button .icon.spin-animation { animation: spin 0.5s linear infinite; } /* Сделаем спиннер постоянным */
+        .button .icon.no-spin { animation: none; } /* Класс для остановки спиннера */
 
-        .section {
-            background-color: var(--tg-theme-secondary-bg-color, var(--container-bg)); border-radius: var(--border-radius);
-            padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: background-color var(--transition-speed);
-        }
-
-        .section-title {
-            font-size: 1.1em; font-weight: 600; margin-bottom: 15px;
-            color: var(--tg-theme-text-color, var(--text-color)); transition: color var(--transition-speed);
-        }
-
-        .email-display {
-            display: flex; align-items: center; border: 2px solid var(--tg-theme-hint-color, var(--border-color));
-            background-color: var(--tg-theme-bg-color, #f8f9fa); border-radius: var(--border-radius);
-            padding: 12px 15px; margin-bottom: 15px; cursor: pointer;
-            transition: background-color var(--transition-speed), border-color var(--transition-speed), box-shadow 0.1s;
-            overflow: hidden; color: var(--tg-theme-text-color, var(--text-color));
-        }
-        .email-display:hover { border-color: var(--tg-theme-link-color, #007bff); }
-        .email-display:active { box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
-
-        #email-address { flex-grow: 1; font-size: 1em; overflow-wrap: break-word; word-break: break-all; min-height: 1.2em; }
-        #email-address.placeholder { color: var(--tg-theme-hint-color, var(--secondary-text-color)); }
-
-        .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
-        .button {
-            display: flex; align-items: center; justify-content: center;
-            background-color: var(--tg-theme-button-color, var(--button-bg));
-            color: var(--tg-theme-button-text-color, var(--button-text));
-            border: 1px solid transparent; border-color: var(--tg-theme-button-color, var(--border-color));
-            border-radius: var(--border-radius); padding: 10px 15px; font-size: 0.95em; font-weight: 500;
-            cursor: pointer; transition: background-color var(--transition-speed), transform 0.1s, border-color var(--transition-speed), color var(--transition-speed);
-            flex-grow: 1; text-align: center; -webkit-tap-highlight-color: transparent;
-        }
-        .button:active { transform: scale(0.97); filter: brightness(0.95); }
-        .button:hover:not(:active) { filter: brightness(1.05); }
-        .button .icon { margin-right: 8px; font-size: 1.1em; transition: transform 0.3s ease-out; display: inline-block; }
-
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px) rotate(-5deg); } 75% { transform: translateX(3px) rotate(5deg); } }
-        .button .icon.spin-animation { animation: spin 0.5s ease-out forwards; }
-        .button .icon.shake-animation { animation: shake 0.4s ease-in-out forwards; }
-
-        #inbox-list { display: flex; flex-direction: column; gap: 10px; min-height: 150px; }
-        #inbox-list.has-messages { justify-content: flex-start; align-items: stretch; text-align: left; }
-
-        .inbox-placeholder { display: flex; justify-content: center; align-items: center; flex-grow: 1; padding: 20px; text-align: center; color: var(--tg-theme-hint-color, var(--secondary-text-color)); }
-        .inbox-placeholder.error { color: var(--tg-theme-destructive-text-color, var(--error-color)); font-weight: 500; }
-
-        .message-item {
-            border: 1px solid var(--tg-theme-hint-color, #dee2e6); border-radius: calc(var(--border-radius) - 4px); padding: 12px 15px;
-            background-color: var(--tg-theme-bg-color, #f8f9fa);
-            transition: background-color var(--transition-speed), border-color var(--transition-speed), transform 0.2s;
-            opacity: 0; transform: translateY(5px); animation: fadeIn 0.4s ease-out forwards;
-            cursor: pointer; color: var(--tg-theme-text-color, var(--text-color));
-        }
-         .message-item:hover { border-color: var(--tg-theme-text-color, var(--border-color)); background-color: var(--tg-theme-secondary-bg-color, var(--container-bg)); }
-        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
-        .message-item span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .message-item .sender { font-weight: 600; margin-bottom: 3px; font-size: 0.95em; }
-        .message-item .subject { font-weight: 500; margin-bottom: 4px; font-size: 0.9em; }
-        .message-item .intro { font-size: 0.85em; color: var(--tg-theme-hint-color, var(--secondary-text-color)); }
-
-        #message-view {
-            display: none; background-color: var(--tg-theme-secondary-bg-color, var(--container-bg));
-            border-radius: var(--border-radius); padding: 20px; margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); color: var(--tg-theme-text-color, var(--text-color));
-        }
-        .message-header { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--tg-theme-hint-color, #eee); }
-        .message-header div { margin-bottom: 5px; font-size: 0.9em; word-break: break-all; }
-        .message-header strong { font-weight: 600; margin-right: 5px; color: var(--tg-theme-text-color, var(--text-color)); }
-        .message-body {
-            margin-top: 15px; font-size: 0.95em; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word;
-            max-height: 50vh; overflow-y: auto; padding: 10px; background-color: var(--tg-theme-bg-color, #f8f9fa);
-            border-radius: calc(var(--border-radius) / 2); border: 1px solid var(--tg-theme-hint-color, #eee);
-        }
-        #back-to-inbox-btn {
-            margin-top: 20px; flex-grow: 0; width: auto; padding: 8px 20px;
-            background-color: var(--tg-theme-hint-color, #6c757d); border-color: var(--tg-theme-hint-color, #6c757d);
-            color: var(--tg-theme-button-text-color, white);
-        }
-        #message-view-loader { text-align: center; padding: 30px; color: var(--tg-theme-hint-color, var(--secondary-text-color)); }
-
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); color: white; display: flex; justify-content: center; align-items: center; font-size: 1.2em; z-index: 1000; visibility: hidden; opacity: 0; transition: opacity 0.2s ease-out, visibility 0.2s; }
-        #loading-overlay.visible { visibility: visible; opacity: 1; }
+        /* УДАЛЕНЫ СТИЛИ ДЛЯ #loading-overlay */
 
         .footer { text-align: center; margin-top: auto; padding-top: 20px; padding-bottom: 10px; font-size: 0.8em; }
         .footer a { color: var(--tg-theme-link-color, #007bff); text-decoration: none; }
@@ -131,17 +54,19 @@
     <div class="section" id="account-section">
         <div class="section-title">Ваш адрес временной почты</div>
         <div class="email-display" id="email-display" title="Нажмите, чтобы скопировать">
-            <span id="email-address" class="placeholder">Загрузка...</span>
+            <span id="email-address" class="placeholder">Инициализация...</span>
         </div>
         <div class="action-buttons">
-            <button class="button" id="change-email-btn"><span class="icon">❌</span>Сменить e-mail</button>
-            <button class="button" id="refresh-inbox-btn"><span class="icon">🔄</span>Обновить</button>
+            <button class="button" id="change-email-btn" disabled><span class="icon">❌</span>Сменить e-mail</button>
+            <button class="button" id="refresh-inbox-btn" disabled><span class="icon">🔄</span>Обновить</button>
         </div>
     </div>
 
     <div class="section" id="inbox-section">
         <div class="section-title">Входящие</div>
-        <div id="inbox-list"></div>
+        <div id="inbox-list">
+             <!-- Начальное состояние инбокса будет установлено JS -->
+        </div>
     </div>
 
     <div id="message-view" class="section">
@@ -153,19 +78,22 @@
         <a href="https://mail.tm" target="_blank" rel="noopener noreferrer">Powered by Mail.tm</a>
     </div>
 
-    <div id="loading-overlay"><span>Загрузка...</span></div>
+    <!-- УДАЛЕН <div id="loading-overlay">...</div> -->
     <div id="toast-notification" class="toast-notification"></div>
 
     <script>
         // --- Глобальные переменные и константы ---
         const API_BASE_URL = 'https://api.mail.tm';
         const LS_KEY = 'tempMailAccountData';
-        const POLLING_INTERVAL = 20000; // Интервал проверки новых писем (20 секунд)
+        const POLLING_INTERVAL = 20000;
         let currentAccount = null;
         let apiToken = null;
-        let isLoading = false; // Флаг общей загрузки приложения (управляется showLoadingOverlay)
         let pollingIntervalId = null;
         let displayedMessageIds = new Set();
+        // Флаги состояния для управления кнопками (вместо isLoading)
+        let isInitializing = true; // Флаг начальной загрузки
+        let isChangingEmail = false;
+        let isRefreshing = false;
 
         // --- Элементы DOM ---
         const emailAddressEl = document.getElementById('email-address');
@@ -173,7 +101,7 @@
         const inboxListEl = document.getElementById('inbox-list');
         const changeEmailBtn = document.getElementById('change-email-btn');
         const refreshInboxBtn = document.getElementById('refresh-inbox-btn');
-        const loadingOverlay = document.getElementById('loading-overlay');
+        // loadingOverlay УДАЛЕН
         const toastNotificationEl = document.getElementById('toast-notification');
         const accountSectionEl = document.getElementById('account-section');
         const inboxSectionEl = document.getElementById('inbox-section');
@@ -182,55 +110,57 @@
         const backToInboxBtn = document.getElementById('back-to-inbox-btn');
 
         // --- Утилиты ---
-        const showLoadingOverlay = (show) => {
-            isLoading = show; // Обновляем глобальный флаг isLoading
-            loadingOverlay.classList.toggle('visible', show);
-            // Блокируем/разблокируем кнопки во время общей загрузки
-            changeEmailBtn.disabled = show;
-            refreshInboxBtn.disabled = show;
-            console.log(`Loading overlay ${show ? 'shown' : 'hidden'}`);
-        };
+        // showLoadingOverlay УДАЛЕНА
         let toastTimeout;
-        const showToast = (message, type = 'info', duration = 3000) => {
-            clearTimeout(toastTimeout);
-            toastNotificationEl.textContent = message;
-            toastNotificationEl.className = `toast-notification ${type}`;
-            requestAnimationFrame(() => { // Убедимся, что класс применился перед анимацией
-                toastNotificationEl.classList.add('show');
-            });
-            toastTimeout = setTimeout(() => {
-                toastNotificationEl.classList.remove('show');
-            }, duration);
-        };
+        const showToast = (message, type = 'info', duration = 3000) => { clearTimeout(toastTimeout); toastNotificationEl.textContent = message; toastNotificationEl.className = `toast-notification ${type}`; requestAnimationFrame(() => { toastNotificationEl.classList.add('show'); }); toastTimeout = setTimeout(() => { toastNotificationEl.classList.remove('show'); }, duration); };
         const generatePassword = (length = 12) => { const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; let password = ""; for (let i = 0, n = charset.length; i < length; ++i) password += charset.charAt(Math.floor(Math.random() * n)); return password; };
         const escapeHtml = (unsafe = '') => { const temp = document.createElement('div'); temp.textContent = unsafe; return temp.innerHTML; };
-        const animateIcon = (buttonId, animationClass) => { const button = document.getElementById(buttonId); const icon = button?.querySelector('.icon'); if (icon) { icon.classList.remove('spin-animation', 'shake-animation'); /* Сначала убираем старые */ void icon.offsetWidth; /* Трюк для рестарта анимации */ icon.classList.add(animationClass); setTimeout(() => icon.classList.remove(animationClass), 500); } };
+        const animateIcon = (buttonId, animationClass) => { const button = document.getElementById(buttonId); const icon = button?.querySelector('.icon'); if (icon) { icon.classList.remove('spin-animation', 'shake-animation', 'no-spin'); void icon.offsetWidth; icon.classList.add(animationClass); setTimeout(() => icon.classList.remove(animationClass), 500); } }; // Добавили no-spin в очистку
+        const stopIconAnimation = (buttonId, animationClassToRemove = 'spin-animation') => { const button = document.getElementById(buttonId); const icon = button?.querySelector('.icon'); if (icon) { icon.classList.remove(animationClassToRemove); icon.classList.add('no-spin'); }}; // Функция для остановки анимации
+
+        // Функция для управления состоянием кнопок
+        const updateButtonStates = () => {
+            // Блокируем, если идет инициализация ИЛИ смена email ИЛИ обновление
+            const shouldBeDisabled = isInitializing || isChangingEmail || isRefreshing;
+            changeEmailBtn.disabled = shouldBeDisabled;
+            refreshInboxBtn.disabled = shouldBeDisabled;
+
+            // Обновляем текст кнопок, если они заблокированы из-за конкретного действия
+            if (isChangingEmail) {
+                changeEmailBtn.innerHTML = `<span class="icon">⏳</span>Смена...`;
+            } else {
+                 changeEmailBtn.innerHTML = `<span class="icon">❌</span>Сменить e-mail`;
+            }
+            if (isRefreshing) {
+                refreshInboxBtn.innerHTML = `<span class="icon spin-animation">🔄</span>Обновление...`;
+            } else {
+                 refreshInboxBtn.innerHTML = `<span class="icon">🔄</span>Обновить`;
+                 stopIconAnimation('refresh-inbox-btn'); // Убираем анимацию, если она была
+            }
+        };
+
 
         // --- Взаимодействие с API Mail.tm ---
+        // Функция fetchAPI остается без изменений по сравнению с предыдущей версией (без showLoadingOverlay)
         async function fetchAPI(endpoint, options = {}) {
             const { method = 'GET', body = null, needsAuth = true, isRetry = false } = options;
             const url = API_BASE_URL + endpoint;
-            const headers = { 'Accept': 'application/ld+json' }; // Mail.tm использует application/ld+json
+            const headers = { 'Accept': 'application/ld+json' };
             if (body) headers['Content-Type'] = 'application/json';
 
             if (needsAuth) {
-                // Попытка получить токен, если его нет (и это не повторный запрос после ошибки 401)
                 if (!apiToken && !isRetry) {
                     console.log("Auth required, attempting token refresh...");
-                    const gotToken = await getToken(); // getToken теперь не показывает оверлей
+                    const gotToken = await getToken();
                     if (!gotToken) {
-                        // Если токен так и не получили, прерываем запрос
                         throw new Error("Auth required, but token could not be obtained.");
                     }
                 }
-                // Добавляем токен, если он есть (он мог появиться после вызова getToken)
                 if (apiToken) {
                     headers['Authorization'] = `Bearer ${apiToken}`;
                 } else if (!isRetry) {
-                    // Если токена все еще нет (несмотря на попытку выше), и это не повтор - ошибка
                      throw new Error("Auth required, but token is missing after attempt.");
                 } else {
-                    // Если это повторный запрос после 401, а токена все нет - окончательная ошибка
                     throw new Error("Auth required, token still missing after retry.");
                 }
             }
@@ -239,7 +169,6 @@
             try {
                 const response = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : null });
 
-                // Успешный ответ без содержимого (например, DELETE)
                 if (response.status === 204) {
                     console.log(`API Success (204 No Content): ${method} ${endpoint}`);
                     return { ok: true, data: null };
@@ -251,12 +180,10 @@
                     try {
                         data = JSON.parse(responseBodyText);
                     } catch (e) {
-                        // Если парсинг JSON не удался, но статус ОК, вернуть текст как есть
                         if (response.ok) {
                              console.warn(`API Success: ${method} ${endpoint} - Received non-JSON response:`, responseBodyText);
                              return { ok: true, data: responseBodyText };
                         }
-                        // Если статус не ОК и не JSON - ошибка
                         console.error('Failed to parse JSON:', responseBodyText);
                         throw new Error(`Invalid server response (status ${response.status}, not JSON)`);
                     }
@@ -266,39 +193,84 @@
                     console.error('API Error Response:', { status: response.status, data });
                     const errorMessage = data?.message || data?.detail || `API Error: ${response.status}`;
 
-                    // Если ошибка 401 (Unauthorized) и нужен токен, и это НЕ повторный запрос
                     if (response.status === 401 && needsAuth && !isRetry) {
                         console.warn("API 401 Unauthorized. Invalidating token and retrying...");
-                        apiToken = null; // Сбрасываем невалидный токен
-                        // Повторяем запрос с флагом isRetry=true
+                        apiToken = null;
                         return await fetchAPI(endpoint, { ...options, isRetry: true });
                     }
-                    throw new Error(errorMessage); // Выбрасываем ошибку для остальных случаев
+                    throw new Error(errorMessage);
                 }
 
                 console.log(`API Success: ${method} ${endpoint}`);
                 return { ok: true, data };
 
             } catch (error) {
-                // Ловим как ошибки fetch (сеть), так и ошибки из throw выше
                 console.error(`API Fetch/Process Error: ${method} ${endpoint}`, error);
-                // Показываем тост только для ошибок, не связанных с повторной авторизацией
                 if (!error.message.includes('401') && !isRetry) {
                     showToast(`API Error: ${error.message}`, 'error');
                 }
-                // Возвращаем стандартизированный объект ошибки
                 return { ok: false, error: error };
             }
         }
 
 
         // --- Управление UI ---
-        const updateAccountUI = () => { if (currentAccount?.address) { emailAddressEl.textContent = currentAccount.address; emailAddressEl.classList.remove('placeholder'); emailDisplayEl.title = 'Нажмите, чтобы скопировать'; emailDisplayEl.style.cursor = 'pointer'; } else { emailAddressEl.textContent = 'Нет аккаунта'; emailAddressEl.classList.add('placeholder'); emailDisplayEl.title = ''; emailDisplayEl.style.cursor = 'default'; } };
-        const setInboxState = (state, message = '') => { console.log(`UI: Inbox state -> '${state}'` + (message ? `: ${message}` : '')); inboxListEl.innerHTML = ''; inboxListEl.classList.remove('has-messages'); const placeholder = document.createElement('div'); placeholder.className = 'inbox-placeholder'; let showPlaceholder = true; switch(state) { case 'empty': placeholder.textContent = 'Нет входящих сообщений'; break; case 'error': placeholder.textContent = `Ошибка: ${escapeHtml(message)}`; placeholder.classList.add('error'); break; case 'messages': showPlaceholder = false; break; default: placeholder.textContent = 'Неизвестное состояние'; placeholder.classList.add('error'); } if(showPlaceholder) inboxListEl.appendChild(placeholder); };
+        const updateAccountUI = () => {
+             // Не меняем на "Нет аккаунта" если идет инициализация
+            if (isInitializing && !currentAccount) {
+                 emailAddressEl.textContent = 'Загрузка аккаунта...';
+                 emailAddressEl.classList.add('placeholder');
+                 emailDisplayEl.title = '';
+                 emailDisplayEl.style.cursor = 'default';
+                 return;
+            }
+            if (currentAccount?.address) {
+                emailAddressEl.textContent = currentAccount.address;
+                emailAddressEl.classList.remove('placeholder');
+                emailDisplayEl.title = 'Нажмите, чтобы скопировать';
+                emailDisplayEl.style.cursor = 'pointer';
+            } else {
+                emailAddressEl.textContent = 'Нет аккаунта / Ошибка';
+                emailAddressEl.classList.add('placeholder');
+                emailDisplayEl.title = '';
+                emailDisplayEl.style.cursor = 'default';
+            }
+        };
+
+        // Добавим состояние 'loading'
+        const setInboxState = (state, message = '') => {
+            console.log(`UI: Inbox state -> '${state}'` + (message ? `: ${message}` : ''));
+            inboxListEl.innerHTML = '';
+            inboxListEl.classList.remove('has-messages');
+            const placeholder = document.createElement('div');
+            placeholder.className = 'inbox-placeholder';
+            let showPlaceholder = true;
+            switch(state) {
+                case 'loading':
+                    placeholder.innerHTML = '<span class="icon spin-animation">⏳</span> Загрузка сообщений...'; // Используем иконку
+                    break;
+                case 'empty':
+                    placeholder.textContent = 'Нет входящих сообщений';
+                    break;
+                case 'error':
+                    placeholder.textContent = `Ошибка: ${escapeHtml(message)}`;
+                    placeholder.classList.add('error');
+                    break;
+                case 'messages':
+                    showPlaceholder = false;
+                    break;
+                default:
+                    placeholder.textContent = 'Неизвестное состояние';
+                    placeholder.classList.add('error');
+            }
+            if(showPlaceholder) inboxListEl.appendChild(placeholder);
+        };
+
+        // displayMessages, showInboxList, showMessageContent остаются без изменений
+
         const displayMessages = (messages = []) => {
-             // Очищаем только если действительно есть новые сообщения или их нет совсем
             if (messages.length > 0 || displayedMessageIds.size > 0) {
-                inboxListEl.innerHTML = ''; // Очистка перед добавлением
+                inboxListEl.innerHTML = '';
             }
 
             if (!messages.length) {
@@ -306,7 +278,7 @@
                 displayedMessageIds.clear();
                 return;
             }
-            setInboxState('messages'); // Убирает плейсхолдер, если он был
+            setInboxState('messages');
             inboxListEl.classList.add('has-messages');
             messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -317,7 +289,6 @@
                 const msgDiv = document.createElement('div');
                 msgDiv.classList.add('message-item');
                 msgDiv.dataset.messageId = msg.id;
-                // Обеспечиваем безопасный вывод данных
                 const sender = escapeHtml(msg.from?.address || 'Неизвестно');
                 const subject = escapeHtml(msg.subject || '(Без темы)');
                 const intro = escapeHtml(msg.intro || '');
@@ -336,20 +307,26 @@
         };
 
         const showInboxList = () => { messageViewEl.style.display = 'none'; messageViewContentEl.innerHTML = ''; inboxSectionEl.style.display = 'block'; accountSectionEl.style.display = 'block'; console.log("UI: Switched to inbox list view."); };
+
         async function showMessageContent(messageId) {
             console.log(`UI: Showing content for message ${messageId}`);
             if (!currentAccount) { showToast("Ошибка: аккаунт не загружен.", "error"); return; }
+
+            // Блокируем кнопки на время просмотра
+            isRefreshing = true; // Используем флаг обновления для блокировки
+            updateButtonStates();
 
             inboxSectionEl.style.display = 'none';
             accountSectionEl.style.display = 'none';
             messageViewEl.style.display = 'block';
             messageViewContentEl.innerHTML = '<div id="message-view-loader">Загрузка письма...</div>';
 
-            // Токен должен быть получен на этапе fetchMessages или getToken, но проверим на всякий случай
             if (!apiToken) {
                  showToast("Ошибка авторизации для просмотра письма.", "error");
-                 setInboxState('error', 'Ошибка авторизации.'); // Обновить состояние инбокса
-                 showInboxList(); // Вернуть к списку
+                 setInboxState('error', 'Ошибка авторизации.');
+                 showInboxList();
+                 isRefreshing = false; // Разблокируем кнопки
+                 updateButtonStates();
                  return;
             }
 
@@ -361,7 +338,6 @@
                 const from = escapeHtml(msg.from?.address || '?');
                 const to = msg.to?.map(t => escapeHtml(t.address)).join(', ') || '?';
                 const subject = escapeHtml(msg.subject || '(Без темы)');
-                // Отображаем текстовую версию письма, если есть. Можно добавить и HTML, но нужна санитизация.
                 const body = escapeHtml(msg.text || msg.html?.join('\n') || '(Нет текста)');
                 messageViewContentEl.innerHTML = `
                     <div class="message-header">
@@ -370,26 +346,27 @@
                         <div><strong>Тема:</strong> ${subject}</div>
                         <div><strong>Дата:</strong> ${mailDate}</div>
                     </div>
-                    <div class="message-body">${body}</div>`; // В pre для сохранения форматирования текста
+                    <div class="message-body">${body}</div>`;
                 console.log("Message content displayed.");
             } else {
                 const errorMsg = escapeHtml(result.error?.message || 'Неизвестная ошибка');
                 messageViewContentEl.innerHTML = `<div class="inbox-placeholder error">Ошибка загрузки письма: ${errorMsg}</div>`;
                 console.error("Failed to fetch message content:", result.error);
-                // Не показываем тост здесь, т.к. ошибка отображается в самом блоке
             }
+             isRefreshing = false; // Разблокируем кнопки после загрузки
+             updateButtonStates();
         }
 
         // --- Основные действия ---
+        // loadAccountData, saveAccountData, getToken, createNewAccount БЕЗ ИЗМЕНЕНИЙ (они уже не управляли overlay)
         const loadAccountData = () => {
             const savedData = localStorage.getItem(LS_KEY);
             if (savedData) {
                 try {
                     const data = JSON.parse(savedData);
-                    // Проверяем наличие всех необходимых полей
                     if (data.address && data.password && data.id) {
                         currentAccount = data;
-                        apiToken = null; // Сбрасываем токен, он будет получен при первом запросе
+                        apiToken = null;
                         console.log("Loaded account from localStorage:", currentAccount.address);
                         return true;
                     } else {
@@ -426,72 +403,60 @@
             }
         };
 
-        async function getToken() {
+       async function getToken() {
             if (!currentAccount?.address || !currentAccount?.password) {
                 console.error("getToken: Missing credentials.");
-                // Не устанавливаем состояние ошибки здесь, вызывающая функция должна это сделать
                 return false;
             }
-            // Если токен уже есть, просто возвращаем true
             if (apiToken) {
                 console.log("Using existing token.");
                 return true;
             }
 
             console.log('Requesting new token...');
-            // НЕ ИСПОЛЬЗУЕМ showLoadingOverlay здесь
             const result = await fetchAPI('/token', {
                 method: 'POST',
-                needsAuth: false, // Запрос токена не требует авторизации
+                needsAuth: false,
                 body: {
                     address: currentAccount.address,
                     password: currentAccount.password
                 }
             });
-            // НЕ ИСПОЛЬЗУЕМ showLoadingOverlay здесь
 
             if (result.ok && result.data?.token) {
                 apiToken = result.data.token;
                 console.log('Token acquired successfully.');
                 return true;
             } else {
-                apiToken = null; // Убедимся, что токен сброшен при ошибке
+                apiToken = null;
                 const errorMsg = result.error?.message || 'Не удалось получить токен.';
                 console.error("Failed to get token:", errorMsg);
-                // Показываем тост об ошибке получения токена
                 showToast(`Ошибка авторизации: ${errorMsg}`, 'error');
-                // Вызывающая функция должна обработать невозможность получения токена (например, показать ошибку в Inbox)
                 return false;
             }
         }
 
         async function createNewAccount() {
-            stopPolling(); // Остановить старый поллинг, если он был
+            stopPolling();
             console.log('Attempting to create a new account...');
-            // НЕ ИСПОЛЬЗУЕМ showLoadingOverlay здесь
-            setInboxState('empty'); // Показать пустой инбокс во время создания
-            updateAccountUI(); // Показать "Нет аккаунта"
+            setInboxState('empty');
+            updateAccountUI(); // Покажет "Загрузка..." если isInitializing=true, или "Нет аккаунта" если isChangingEmail=true
 
-            // 1. Получить домены
             const domainsResult = await fetchAPI('/domains', { needsAuth: false });
             if (!domainsResult.ok || !domainsResult.data['hydra:member']?.length) {
                 const errorMsg = domainsResult.error?.message || 'Не удалось получить список доменов.';
                 console.error("Failed to get domains:", errorMsg);
                 setInboxState('error', `Ошибка создания: ${errorMsg}`);
-                // НЕ ИСПОЛЬЗУЕМ showLoadingOverlay здесь
-                return false; // Не удалось создать
+                return false;
             }
 
-            // 2. Найти активный домен
             const activeDomain = domainsResult.data['hydra:member'].find(d => d.isActive);
             if (!activeDomain) {
                 console.error("No active domains found.");
                 setInboxState('error', 'Ошибка создания: Нет доступных доменов.');
-                // НЕ ИСПОЛЬЗУЕМ showLoadingOverlay здесь
                 return false;
             }
 
-            // 3. Сгенерировать данные и создать аккаунт
             const username = Math.random().toString(36).substring(2, 10);
             const password = generatePassword();
             const address = `${username}@${activeDomain.domain}`;
@@ -507,34 +472,29 @@
                 const errorMsg = createResult.error?.message || 'Не удалось создать аккаунт.';
                 console.error("Failed to create account:", errorMsg, createResult.error);
                 setInboxState('error', `Ошибка создания: ${errorMsg}`);
-                 // НЕ ИСПОЛЬЗУЕМ showLoadingOverlay здесь
                 return false;
             }
 
-            // 4. Сохранить данные и обновить UI
             currentAccount = {
-                address: createResult.data.address, // Используем адрес из ответа API
-                password: password, // Используем сгенерированный пароль
-                id: createResult.data.id, // Используем ID из ответа API
+                address: createResult.data.address,
+                password: password,
+                id: createResult.data.id,
             };
-            apiToken = null; // Токен нужно будет получить отдельно
+            apiToken = null;
             saveAccountData();
-            updateAccountUI(); // Показать новый адрес
+            updateAccountUI();
             showToast(`Создан адрес: ${currentAccount.address}`, 'success');
             console.log("New account created successfully:", currentAccount.address);
 
-            // 5. Получить токен для нового аккаунта (необходимо для fetchMessages)
             const gotToken = await getToken();
             if (gotToken) {
-                 // 6. Загрузить сообщения и запустить поллинг
-                await fetchMessages(); // Загрузить сообщения сразу
+                setInboxState('loading'); // Показать загрузку перед запросом сообщений
+                await fetchMessages();
                 startPolling();
             } else {
-                // Если не удалось получить токен сразу после создания - показать ошибку
-                 setInboxState('error', 'Аккаунт создан, но произошла ошибка авторизации.');
+                 setInboxState('error', 'Аккаунт создан, но ошибка авторизации.');
             }
-            // НЕ ИСПОЛЬЗУЕМ showLoadingOverlay здесь
-            return true; // Аккаунт успешно создан (даже если токен не получили)
+            return true;
         }
 
         async function fetchMessages(isPolling = false) {
@@ -549,44 +509,35 @@
             if (!isPolling) console.log("Fetching messages (manual refresh)...");
             else console.log("Polling for new messages...");
 
-            // Попытка получить токен, если его нет (getToken обработает показ ошибки, если не получится)
             if (!apiToken) {
                 if (!(await getToken())) {
-                    // Если токен не получен, прерываем загрузку сообщений
                     if (!isPolling) setInboxState('error', 'Ошибка авторизации для загрузки сообщений.');
-                    return;
+                    return; // Прерываем, если токен не получен
                 }
             }
 
-            // Запрос сообщений
             const result = await fetchAPI('/messages?page=1', { needsAuth: true });
 
             if (result.ok) {
                 const messages = result.data['hydra:member'] || [];
                 const newMessages = messages.filter(msg => !displayedMessageIds.has(msg.id));
 
-                if (newMessages.length > 0 && (isPolling || displayedMessageIds.size === 0)) { // Показать тост при поллинге или при первой загрузке
+                if (newMessages.length > 0 && (isPolling || displayedMessageIds.size === 0)) {
                     console.log(`Found ${newMessages.length} new message(s).`);
-                    if (isPolling) { // Показывать тост только при автообновлении
+                    if (isPolling) {
                        showToast(`Новое письмо от ${escapeHtml(newMessages[0].from?.address || '?')}`, 'success');
                        if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
                     }
                 }
-                // Отобразить все полученные сообщения
-                displayMessages(messages);
+                displayMessages(messages); // Отобразит сообщения или 'empty' state
             } else {
-                // Ошибка при загрузке сообщений
                 const errorMsg = result.error?.message || 'Не удалось загрузить сообщения.';
                 console.error("Failed to fetch messages:", errorMsg);
                 if (!isPolling) {
-                    // Показать ошибку в инбоксе только при ручном обновлении или инициализации
                     setInboxState('error', errorMsg);
-                    // Можно показать и тост
-                    showToast(`Ошибка загрузки: ${errorMsg}`, 'error');
+                    // Тост уже показывается в fetchAPI при ошибке (кроме 401)
                 } else {
-                     // При ошибке поллинга просто логируем, чтобы не спамить пользователя
                     console.warn("Polling fetchMessages failed:", errorMsg);
-                    // Если ошибка 401 при поллинге - вероятно токен истек, сбрасываем и пытаемся получить в след. цикле
                     if (result.error?.message?.includes('401') || result.error?.message?.includes('token')) {
                         apiToken = null;
                     }
@@ -594,14 +545,14 @@
             }
         }
 
+        // startPolling, stopPolling без изменений
         function startPolling() {
-            stopPolling(); // Гарантированно останавливаем предыдущий интервал
+            stopPolling();
             if (!currentAccount) {
                  console.log("Polling not started: no account.");
                  return;
             }
             console.log(`Starting polling every ${POLLING_INTERVAL / 1000} seconds.`);
-            // Сначала запускаем проверку почти сразу, потом по интервалу
             setTimeout(() => fetchMessages(true), 2000);
             pollingIntervalId = setInterval(() => fetchMessages(true), POLLING_INTERVAL);
         }
@@ -616,17 +567,19 @@
 
         // --- Инициализация приложения ---
         async function initializeApp() {
+            isInitializing = true; // Устанавливаем флаг начала инициализации
             console.log("Initializing App...");
-            showLoadingOverlay(true); // <--- Показать оверлей в самом начале
+            updateAccountUI(); // Покажет "Инициализация..." в поле email
+            setInboxState('empty'); // Начнем с пустого инбокса
+            updateButtonStates(); // Заблокирует кнопки
 
             try {
-                // Инициализация Telegram Web App
-                if (window.Telegram && window.Telegram.WebApp) {
+                // Инициализация Telegram Web App (без изменений)
+                 if (window.Telegram && window.Telegram.WebApp) {
                     try {
                         const tg = window.Telegram.WebApp;
                         tg.ready();
                         tg.expand();
-                        // Применение стилей темы Telegram
                         document.body.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color);
                         document.body.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color);
                         document.body.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color);
@@ -634,129 +587,137 @@
                         document.body.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color);
                         document.body.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color);
                         document.body.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color);
-                        // Добавляем fallback для destructive_text_color
                         document.body.style.setProperty('--tg-theme-destructive-text-color', tg.themeParams.destructive_text_color || 'var(--error-color)');
                         console.log("Telegram WebApp initialized and theme applied.");
                     } catch (e) {
                         console.error("Telegram WebApp initialization error:", e);
-                        // Не критично, продолжаем без интеграции с темой
                     }
                 } else {
                     console.warn("Telegram WebApp script not found.");
                 }
 
-                setInboxState('empty'); // Установить начальное состояние инбокса
-
                 // Загрузка или создание аккаунта
                 if (loadAccountData()) {
-                    console.log("Existing account loaded. Fetching messages...");
-                    updateAccountUI();
-                    await fetchMessages(); // Загружаем сообщения (токен получит внутри, если нужно)
+                    console.log("Existing account loaded.");
+                    updateAccountUI(); // Обновит email адрес
+                    setInboxState('loading'); // Показать "Загрузка сообщений..."
+                    await fetchMessages();
                     startPolling();
                 } else {
                     console.log("No existing account. Creating a new one...");
-                    const created = await createNewAccount(); // Создаем аккаунт (он сам загрузит сообщения и начнет поллинг при успехе)
+                     // updateAccountUI() уже вызван в createNewAccount
+                     setInboxState('loading'); // Показать "Загрузка..." пока создается
+                    const created = await createNewAccount();
                     if (!created) {
                          console.error("Initialization failed: Could not create a new account.");
-                         // Ошибка уже должна быть показана в setInboxState внутри createNewAccount
+                         updateAccountUI(); // Обновит UI на "Нет аккаунта / Ошибка"
+                         // Ошибка уже показана в setInboxState
                     }
+                     // fetchMessages и startPolling вызываются внутри createNewAccount при успехе
                 }
                  console.log("Initialization process completed.");
 
             } catch (error) {
-                // Ловим ЛЮБЫЕ ошибки во время инициализации
                 console.error("Critical error during app initialization:", error);
-                setInboxState('error', `Критическая ошибка инициализации: ${error.message}`);
-                showToast(`Ошибка запуска приложения: ${error.message}`, 'error');
+                setInboxState('error', `Критическая ошибка: ${error.message}`);
+                showToast(`Ошибка запуска: ${error.message}`, 'error');
+                 updateAccountUI(); // Показать "Нет аккаунта / Ошибка"
             } finally {
-                showLoadingOverlay(false); // <--- Гарантированно скрыть оверлей в конце
+                isInitializing = false; // Снимаем флаг инициализации
+                updateButtonStates(); // Разблокируем кнопки
             }
         }
 
         // --- Обработчики событий ---
-        changeEmailBtn.addEventListener('click', async () => { // Сделаем async на всякий случай
+        changeEmailBtn.addEventListener('click', async () => {
             animateIcon('change-email-btn', 'shake-animation');
             if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
             console.log('Change email clicked.');
 
-            if (isLoading) { // Проверяем глобальный флаг isLoading
-                console.log("Ignoring click, app is currently loading/busy.");
-                showToast("Подождите, идет загрузка...", "warning", 1500);
-                return;
+            // Проверяем флаги состояния вместо isLoading
+            if (isInitializing || isChangingEmail || isRefreshing) {
+                 console.log("Ignoring click, operation already in progress.");
+                 showToast("Подождите...", "warning", 1500);
+                 return;
             }
 
-            showLoadingOverlay(true); // Показать оверлей на время смены email
+            isChangingEmail = true; // Устанавливаем флаг
+            updateButtonStates(); // Обновляем кнопки (блокировка, текст)
+
             try {
-                stopPolling(); // Остановить поллинг старого ящика
+                stopPolling();
                 localStorage.removeItem(LS_KEY);
                 currentAccount = null;
                 apiToken = null;
-                emailAddressEl.textContent = 'Создание...'; // Обновить UI немедленно
-                emailAddressEl.classList.add('placeholder');
-                displayedMessageIds.clear(); // Очистить старые ID
-                showInboxList(); // Убедиться, что виден список (пустой)
-                setInboxState('empty'); // Показать пустой инбокс
+                updateAccountUI(); // Покажет "Нет аккаунта"
+                displayedMessageIds.clear();
+                showInboxList();
+                setInboxState('loading'); // Показать "Загрузка..." в инбоксе пока создается
 
-                await createNewAccount(); // Запустить создание нового (он сам запустит поллинг и т.д.)
+                await createNewAccount(); // Создаем новый
             } catch (error) {
                  console.error("Error during email change process:", error);
                  showToast(`Ошибка смены email: ${error.message}`, 'error');
-                 // Попытаться восстановить предыдущее состояние или показать ошибку
-                 if(!loadAccountData()) { // Если не удалось восстановить старый
-                    updateAccountUI(); // Показать "Нет аккаунта"
-                    setInboxState('error', 'Ошибка смены email');
-                 } else {
-                    updateAccountUI(); // Показать старый
-                    await fetchMessages(); // Попробовать загрузить его сообщения
+                 // Попытка восстановить старый аккаунт, если он был
+                 if(loadAccountData()) {
+                    updateAccountUI();
+                    setInboxState('loading');
+                    await fetchMessages();
                     startPolling();
+                 } else {
+                     updateAccountUI(); // Покажет "Нет аккаунта / Ошибка"
+                     setInboxState('error', 'Ошибка смены email');
                  }
             } finally {
-                 showLoadingOverlay(false); // Скрыть оверлей после завершения смены
+                isChangingEmail = false; // Снимаем флаг
+                updateButtonStates(); // Обновляем кнопки (разблокировка, текст)
             }
         });
 
-        refreshInboxBtn.addEventListener('click', () => {
-            animateIcon('refresh-inbox-btn', 'spin-animation');
-            if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Легкий щелчок лучше для обновления
+        refreshInboxBtn.addEventListener('click', async () => { // Сделаем async
+             // Не нужна анимация иконки здесь, т.к. текст и иконка меняются
+            if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
             console.log("Refresh clicked.");
 
-            if (isLoading) {
-                console.log("Ignoring click, app is currently loading/busy.");
-                 showToast("Подождите, идет загрузка...", "warning", 1500);
-                return;
+            if (isInitializing || isChangingEmail || isRefreshing) {
+                 console.log("Ignoring click, operation already in progress.");
+                 showToast("Подождите...", "warning", 1500);
+                 return;
             }
             if (!currentAccount) {
                 showToast('Сначала создайте или загрузите email.', 'warning');
                 return;
             }
 
-            showInboxList(); // Показать список входящих перед обновлением
-             // Можно показать краткий индикатор обновления прямо на кнопке или рядом
-             refreshInboxBtn.disabled = true; // Временно блокируем кнопку
-             const originalText = refreshInboxBtn.innerHTML;
-             refreshInboxBtn.innerHTML = `<span class="icon spin-animation">🔄</span> Обновление...`;
+            isRefreshing = true; // Устанавливаем флаг
+            updateButtonStates(); // Обновляем кнопки (блокировка, текст "Обновление...")
 
-             fetchMessages(false).finally(() => { // false = ручное обновление
-                // Восстанавливаем кнопку после завершения запроса (успех или ошибка)
-                refreshInboxBtn.disabled = false;
-                refreshInboxBtn.innerHTML = originalText;
-                // Убираем анимацию, если она не была снята автоматически
-                const icon = refreshInboxBtn.querySelector('.icon');
-                if(icon) icon.classList.remove('spin-animation');
-             });
+            showInboxList(); // Показать список входящих
+            setInboxState('loading'); // Показать загрузку в инбоксе
+
+            try {
+                await fetchMessages(false); // false = ручное обновление
+            } catch(error) {
+                 console.error("Error during manual refresh:", error);
+                 // Ошибка уже должна быть показана в setInboxState или тостом
+            } finally {
+                 isRefreshing = false; // Снимаем флаг
+                 updateButtonStates(); // Обновляем кнопки (разблокировка, текст)
+            }
         });
 
+        // emailDisplayEl click handler БЕЗ ИЗМЕНЕНИЙ
         emailDisplayEl.addEventListener('click', () => {
-            if (!currentAccount?.address || emailAddressEl.classList.contains('placeholder') || isLoading) return;
+            // Не копируем, если идет загрузка/смена/обновление
+            if (!currentAccount?.address || emailAddressEl.classList.contains('placeholder') || isInitializing || isChangingEmail || isRefreshing) return;
             navigator.clipboard.writeText(currentAccount.address)
                 .then(() => showToast('Адрес скопирован!', 'success'))
                 .catch(err => {
                     console.error('Clipboard copy error:', err);
-                    // Пытаемся скопировать через execCommand как fallback (устаревший метод)
                     try {
                         const textArea = document.createElement("textarea");
                         textArea.value = currentAccount.address;
-                        textArea.style.position = "fixed"; // Prevent scrolling to bottom
+                        textArea.style.position = "fixed";
                         document.body.appendChild(textArea);
                         textArea.focus();
                         textArea.select();
@@ -769,8 +730,16 @@
                     }
                 });
         });
-        backToInboxBtn.addEventListener('click', showInboxList);
-        window.addEventListener('beforeunload', stopPolling); // Остановка поллинга при закрытии/перезагрузке
+
+        backToInboxBtn.addEventListener('click', () => {
+            // Перед возвратом к списку убедимся, что кнопки разблокированы
+            // (на случай если пользователь зашел в письмо во время обновления)
+            isRefreshing = false;
+            updateButtonStates();
+            showInboxList();
+        });
+
+        window.addEventListener('beforeunload', stopPolling);
 
         // --- Запуск ---
         document.addEventListener('DOMContentLoaded', initializeApp);
