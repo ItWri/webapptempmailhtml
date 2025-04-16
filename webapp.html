@@ -115,13 +115,7 @@
             text-align: center;
             -webkit-tap-highlight-color: transparent;
         }
-         /* Стилизация кнопки "Сменить" */
-        .button.change {
-            /* Можно добавить красный оттенок, если тема позволяет */
-             /* background-color: var(--tg-theme-destructive-text-color, #ffebee); */
-             /* color: var(--tg-theme-destructive-text-color, #dc3545); */
-             /* border-color: var(--tg-theme-destructive-text-color, #dc3545); */
-        }
+        /* Пустое правило .button.change УДАЛЕНО */
 
         .button:active { transform: scale(0.97); filter: brightness(0.95); }
         .button:hover:not(:active) { filter: brightness(1.05); }
@@ -181,7 +175,25 @@
         .footer a:hover { text-decoration: underline; }
 
         /* Toast уведомления */
-        .toast-notification { /* ... стили как раньше ... */ }
+        .toast-notification {
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.4s ease-out, bottom 0.4s ease-out;
+            pointer-events: none;
+        }
+        .toast-notification.show { opacity: 1; bottom: 80px; }
+        .toast-notification.success { background-color: rgba(40, 167, 69, 0.8); }
+        .toast-notification.error { background-color: rgba(220, 53, 69, 0.8); }
+        .toast-notification.warning { background-color: rgba(255, 193, 7, 0.8); color: black; }
 
     </style>
 </head>
@@ -222,7 +234,7 @@
         // --- Глобальные переменные и константы ---
         const API_BASE_URL = 'https://api.mail.tm';
         const LS_KEY = 'tempMailAccountData'; // Ключ для localStorage
-        let currentAccount = null; // { address, password, id, token }
+        let currentAccount = null; // { address, password, id }
         let apiToken = null; // Храним токен отдельно от данных аккаунта
         let isLoading = false; // Флаг для оверлея
 
@@ -236,382 +248,57 @@
         const toastNotificationEl = document.getElementById('toast-notification');
 
         // --- Утилиты ---
-        const showLoadingOverlay = (show) => {
-            isLoading = show;
-            loadingOverlay.classList.toggle('visible', show);
-        };
+        const showLoadingOverlay = (show) => { isLoading = show; loadingOverlay.classList.toggle('visible', show); };
         let toastTimeout;
-        const showToast = (message, type = 'info', duration = 3000) => {
-            clearTimeout(toastTimeout);
-            toastNotificationEl.textContent = message;
-            toastNotificationEl.className = `toast-notification ${type}`;
-            requestAnimationFrame(() => toastNotificationEl.classList.add('show'));
-            toastTimeout = setTimeout(() => toastNotificationEl.classList.remove('show'), duration);
-        };
-        const generatePassword = (length = 12) => {
-            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            let password = "";
-            for (let i = 0, n = charset.length; i < length; ++i) password += charset.charAt(Math.floor(Math.random() * n));
-            return password;
-        };
-        const escapeHtml = (unsafe = '') => {
-             const temp = document.createElement('div'); temp.textContent = unsafe; return temp.innerHTML;
-        };
+        const showToast = (message, type = 'info', duration = 3000) => { clearTimeout(toastTimeout); toastNotificationEl.textContent = message; toastNotificationEl.className = `toast-notification ${type}`; requestAnimationFrame(() => toastNotificationEl.classList.add('show')); toastTimeout = setTimeout(() => { toastNotificationEl.classList.remove('show'); }, duration); };
+        const generatePassword = (length = 12) => { const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; let password = ""; for (let i = 0, n = charset.length; i < length; ++i) password += charset.charAt(Math.floor(Math.random() * n)); return password; };
+        const escapeHtml = (unsafe = '') => { const temp = document.createElement('div'); temp.textContent = unsafe; return temp.innerHTML; };
 
         // --- Взаимодействие с API Mail.tm ---
         async function fetchAPI(endpoint, options = {}) {
             const { method = 'GET', body = null, needsAuth = true, isRetry = false } = options;
             const url = API_BASE_URL + endpoint;
             const headers = { 'Accept': 'application/ld+json' };
-
             if (body) headers['Content-Type'] = 'application/json';
             if (needsAuth) {
-                if (!apiToken && !isRetry) { // Если нет токена и это не повтор после получения токена
-                    console.log("Auth required, but no token. Attempting to get token first...");
-                    const gotToken = await getToken(); // Пытаемся получить токен
-                    if (!gotToken) throw new Error("Необходима авторизация, но токен не получен.");
-                    // Если токен получен, продолжаем с ним
-                }
-                if(apiToken) headers['Authorization'] = `Bearer ${apiToken}`;
-                else if (!isRetry) throw new Error("Необходима авторизация, токен отсутствует."); // Если и после getToken нет, то ошибка
+                if (!apiToken && !isRetry) { console.log("Auth required, attempting token refresh..."); const gotToken = await getToken(); if (!gotToken) throw new Error("Auth required, token unavailable."); }
+                if(apiToken) headers['Authorization'] = `Bearer ${apiToken}`; else if (!isRetry) throw new Error("Auth required, token missing.");
             }
-
             console.log(`API Request: ${method} ${endpoint}`, options);
-
             try {
                 const response = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : null });
-
-                if (response.status === 204) return { ok: true, data: null }; // No Content
-
-                const responseBodyText = await response.text();
-                let data = null;
-                if (responseBodyText) {
-                    try { data = JSON.parse(responseBodyText); }
-                    catch (e) {
-                        if (response.ok) return { ok: true, data: responseBodyText }; // OK, but not JSON
-                        console.error('Failed to parse JSON response:', responseBodyText);
-                        throw new Error(`Некорректный формат ответа сервера (статус ${response.status})`);
-                    }
-                }
-
+                if (response.status === 204) return { ok: true, data: null };
+                const responseBodyText = await response.text(); let data = null;
+                if (responseBodyText) { try { data = JSON.parse(responseBodyText); } catch (e) { if (response.ok) return { ok: true, data: responseBodyText }; console.error('Failed to parse JSON:', responseBodyText); throw new Error(`Invalid server response (status ${response.status})`); } }
                 if (!response.ok) {
                     console.error('API Error Response:', { status: response.status, data });
-                    const errorMessage = data?.message || data?.detail || `Ошибка API: ${response.status}`;
-
-                    if (response.status === 401 && needsAuth && !isRetry) {
-                        console.warn("API returned 401 (Unauthorized). Invalidating token and retrying...");
-                        apiToken = null; // Сбрасываем невалидный токен
-                        // Повторяем запрос, который теперь сначала попытается получить новый токен
-                        return await fetchAPI(endpoint, { ...options, isRetry: true });
-                    }
-                    // Обработка других ошибок (400, 404, 422, 429...)
-                     throw new Error(errorMessage);
+                    const errorMessage = data?.message || data?.detail || `API Error: ${response.status}`;
+                    if (response.status === 401 && needsAuth && !isRetry) { console.warn("API 401 Unauthorized. Invalidating token and retrying..."); apiToken = null; return await fetchAPI(endpoint, { ...options, isRetry: true }); }
+                    throw new Error(errorMessage);
                 }
-                console.log(`API Success: ${method} ${endpoint}`, data);
-                return { ok: true, data };
-
-            } catch (error) {
-                console.error(`API Fetch Error: ${method} ${endpoint}`, error);
-                // Важно не показывать alert, а использовать toast или UI сообщение
-                showToast(`Ошибка API: ${error.message}`, 'error');
-                // Возвращаем объект с ошибкой, чтобы вызывающий код мог ее обработать
-                return { ok: false, error: error };
-            }
+                console.log(`API Success: ${method} ${endpoint}`); return { ok: true, data };
+            } catch (error) { console.error(`API Fetch Error: ${method} ${endpoint}`, error); showToast(`API Error: ${error.message}`, 'error'); return { ok: false, error: error }; }
         }
 
         // --- Управление UI ---
-        const updateAccountUI = () => {
-            if (currentAccount && currentAccount.address) {
-                emailAddressEl.textContent = currentAccount.address;
-                emailAddressEl.classList.remove('placeholder');
-                emailDisplayEl.title = 'Нажмите, чтобы скопировать';
-                emailDisplayEl.style.cursor = 'pointer';
-            } else {
-                emailAddressEl.textContent = 'Нет аккаунта';
-                emailAddressEl.classList.add('placeholder');
-                emailDisplayEl.title = '';
-                emailDisplayEl.style.cursor = 'default';
-            }
-        };
-
-        const setInboxState = (state, message = '') => {
-             console.log(`UI: Setting inbox state to '${state}'` + (message ? `: ${message}` : ''));
-             inboxListEl.innerHTML = ''; // Очищаем всегда
-             inboxListEl.classList.remove('has-messages');
-             const placeholder = document.createElement('div');
-             placeholder.className = 'inbox-placeholder';
-             let showPlaceholder = true;
-
-             switch(state) {
-                 case 'empty': placeholder.textContent = 'Нет входящих сообщений'; break;
-                 case 'error': placeholder.textContent = `Ошибка: ${escapeHtml(message)}`; placeholder.classList.add('error'); break;
-                 case 'messages': showPlaceholder = false; break; // Сообщения будут добавлены отдельно
-                 default: placeholder.textContent = 'Неизвестное состояние'; placeholder.classList.add('error');
-             }
-             if(showPlaceholder) inboxListEl.appendChild(placeholder);
-        };
-
-        const displayMessages = (messages = []) => {
-            if (!messages.length) {
-                setInboxState('empty'); return;
-            }
-            setInboxState('messages'); // Очищаем и готовим для сообщений
-            inboxListEl.classList.add('has-messages');
-            messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-            const fragment = document.createDocumentFragment();
-            messages.forEach(msg => { /* ... создание элемента .message-item ... */ });
-            inboxListEl.appendChild(fragment);
-             messages.forEach(msg => {
-                 const msgDiv = document.createElement('div');
-                 msgDiv.classList.add('message-item');
-                 msgDiv.dataset.messageId = msg.id;
-                 const sender = escapeHtml(msg.from?.address || 'Неизвестно');
-                 const subject = escapeHtml(msg.subject || '(Без темы)');
-                 const intro = escapeHtml(msg.intro || '');
-                 msgDiv.innerHTML = `
-                     <span class="sender" title="${sender}">${sender}</span>
-                     <span class="subject" title="${subject}">${subject}</span>
-                     ${intro ? `<span class="intro" title="${intro}">${intro}</span>` : ''}
-                 `;
-                  fragment.appendChild(msgDiv);
-             });
-             inboxListEl.appendChild(fragment);
-        };
-
+        const updateAccountUI = () => { if (currentAccount?.address) { emailAddressEl.textContent = currentAccount.address; emailAddressEl.classList.remove('placeholder'); emailDisplayEl.title = 'Нажмите, чтобы скопировать'; emailDisplayEl.style.cursor = 'pointer'; } else { emailAddressEl.textContent = 'Нет аккаунта'; emailAddressEl.classList.add('placeholder'); emailDisplayEl.title = ''; emailDisplayEl.style.cursor = 'default'; } };
+        const setInboxState = (state, message = '') => { console.log(`UI: Inbox state -> '${state}'` + (message ? `: ${message}` : '')); inboxListEl.innerHTML = ''; inboxListEl.classList.remove('has-messages'); const placeholder = document.createElement('div'); placeholder.className = 'inbox-placeholder'; let showPlaceholder = true; switch(state) { case 'empty': placeholder.textContent = 'Нет входящих сообщений'; break; case 'error': placeholder.textContent = `Ошибка: ${escapeHtml(message)}`; placeholder.classList.add('error'); break; case 'messages': showPlaceholder = false; break; default: placeholder.textContent = 'Неизвестное состояние'; placeholder.classList.add('error'); } if(showPlaceholder) inboxListEl.appendChild(placeholder); };
+        const displayMessages = (messages = []) => { if (!messages.length) { setInboxState('empty'); return; } setInboxState('messages'); inboxListEl.classList.add('has-messages'); messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); const fragment = document.createDocumentFragment(); messages.forEach(msg => { const msgDiv = document.createElement('div'); msgDiv.classList.add('message-item'); msgDiv.dataset.messageId = msg.id; const sender = escapeHtml(msg.from?.address || '?'); const subject = escapeHtml(msg.subject || '(Без темы)'); const intro = escapeHtml(msg.intro || ''); msgDiv.innerHTML = `<span class="sender" title="${sender}">${sender}</span><span class="subject" title="${subject}">${subject}</span>${intro ? `<span class="intro" title="${intro}">${intro}</span>` : ''}`; fragment.appendChild(msgDiv); }); inboxListEl.appendChild(fragment); };
 
         // --- Основные действия ---
-        const loadAccountData = () => {
-            const savedData = localStorage.getItem(LS_KEY);
-            if (savedData) {
-                try {
-                    const data = JSON.parse(savedData);
-                    // Проверяем наличие основных полей
-                    if (data.address && data.password && data.id) {
-                        currentAccount = data;
-                        apiToken = null; // Сбрасываем токен при загрузке, получим свежий
-                        console.log("Loaded account data from localStorage:", currentAccount.address);
-                        return true;
-                    } else {
-                        console.warn("Invalid data found in localStorage.");
-                        localStorage.removeItem(LS_KEY); // Удаляем некорректные данные
-                    }
-                } catch (e) {
-                    console.error("Error parsing localStorage data:", e);
-                    localStorage.removeItem(LS_KEY);
-                }
-            }
-            console.log("No valid account data found in localStorage.");
-            currentAccount = null;
-            apiToken = null;
-            return false;
-        };
-
-        const saveAccountData = () => {
-            if (currentAccount && currentAccount.address && currentAccount.password && currentAccount.id) {
-                try {
-                    const dataToSave = {
-                        address: currentAccount.address,
-                        password: currentAccount.password,
-                        id: currentAccount.id
-                        // НЕ СОХРАНЯЕМ ТОКЕН!
-                    };
-                    localStorage.setItem(LS_KEY, JSON.stringify(dataToSave));
-                    console.log("Account data saved to localStorage.");
-                } catch (e) {
-                    console.error("Error saving data to localStorage:", e);
-                    showToast("Ошибка сохранения данных сессии.", "error");
-                }
-            }
-        };
-
-        async function getToken() {
-             if (!currentAccount || !currentAccount.address || !currentAccount.password) {
-                  console.error("Cannot get token: Missing account credentials.");
-                  setInboxState('error', 'Данные аккаунта отсутствуют.');
-                  return false;
-              }
-             // Если токен уже есть, просто возвращаем true (можно добавить проверку его валидности позже)
-             if (apiToken) {
-                 console.log("Using existing API token.");
-                 return true;
-             }
-
-             console.log('Requesting API token...');
-             showLoadingOverlay(true); // Показываем оверлей для запроса токена
-             const result = await fetchAPI('/token', {
-                 method: 'POST',
-                 needsAuth: false, // Запрос токена не требует токена
-                 body: {
-                     address: currentAccount.address,
-                     password: currentAccount.password,
-                 }
-             });
-             showLoadingOverlay(false); // Скрываем оверлей
-
-             if (result.ok && result.data?.token) {
-                 apiToken = result.data.token;
-                 console.log('Token acquired successfully.');
-                 return true;
-             } else {
-                 apiToken = null; // Убедимся, что токен сброшен
-                 const errorMsg = result.error?.message || 'Не удалось получить токен.';
-                 showToast(errorMsg, 'error');
-                 setInboxState('error', 'Ошибка авторизации. Попробуйте сменить e-mail.');
-                 // Возможно, стоит удалить невалидные данные из localStorage
-                 // localStorage.removeItem(LS_KEY);
-                 // currentAccount = null;
-                 // updateAccountUI();
-                 return false;
-             }
-        }
-
-        async function createNewAccount() {
-            console.log('Starting new account creation...');
-            showLoadingOverlay(true);
-            setInboxState('empty'); // Показываем "Нет сообщений", пока создается
-            updateAccountUI(); // Обновим UI на случай, если там было "Нет аккаунта"
-
-            // 1. Получить домен
-            const domainsResult = await fetchAPI('/domains', { needsAuth: false });
-            if (!domainsResult.ok || !domainsResult.data['hydra:member']?.length) {
-                showLoadingOverlay(false);
-                setInboxState('error', 'Не удалось получить домен для регистрации.');
-                return false;
-            }
-            const activeDomain = domainsResult.data['hydra:member'].find(d => d.isActive);
-            if (!activeDomain) {
-                 showLoadingOverlay(false);
-                 setInboxState('error', 'Нет доступных доменов.');
-                 return false;
-            }
-
-            // 2. Сгенерировать данные и создать аккаунт
-            const username = Math.random().toString(36).substring(2, 10);
-            const password = generatePassword();
-            const address = `${username}@${activeDomain.domain}`;
-
-            const createResult = await fetchAPI('/accounts', {
-                method: 'POST',
-                needsAuth: false,
-                body: { address, password },
-            });
-
-            if (!createResult.ok || !createResult.data?.id) {
-                 showLoadingOverlay(false);
-                 setInboxState('error', createResult.error?.message || 'Не удалось создать аккаунт.');
-                 return false;
-            }
-
-            // 3. Сохранить данные
-            currentAccount = {
-                 address: createResult.data.address, // Используем адрес из ответа
-                 password: password,
-                 id: createResult.data.id,
-            };
-            apiToken = null; // Сбрасываем старый токен, если был
-            saveAccountData();
-            updateAccountUI();
-            showToast(`Создан адрес: ${currentAccount.address}`, 'success');
-            console.log("New account created and saved:", currentAccount.address);
-
-            // 4. Получить токен (оверлей уже скрыт после создания)
-            await getToken();
-
-            // 5. Обновить сообщения (если токен получен)
-             if(apiToken) {
-                  await fetchMessages();
-             } else {
-                  setInboxState('error', 'Аккаунт создан, но не удалось авторизоваться для получения писем.');
-             }
-            showLoadingOverlay(false); // Убедимся, что скрыт
-            return true;
-        }
-
-        async function fetchMessages() {
-            if (!currentAccount) {
-                 setInboxState('error', 'Аккаунт не выбран.'); return;
-            }
-             console.log("Fetching messages...");
-             // Попробуем получить токен, если его нет
-             if (!apiToken) {
-                 const gotToken = await getToken();
-                 if (!gotToken) {
-                     // getToken уже установил состояние ошибки
-                     return;
-                 }
-             }
-
-             // Не показываем оверлей для обновления сообщений
-             const result = await fetchAPI('/messages?page=1', { needsAuth: true });
-
-             if (result.ok) {
-                 displayMessages(result.data['hydra:member']);
-             } else {
-                  // fetchAPI уже показал toast, установим состояние ошибки в блоке
-                 setInboxState('error', result.error?.message || 'Не удалось загрузить сообщения.');
-                 // Если ошибка 401, токен уже сброшен внутри fetchAPI при обработке ошибки
-             }
-        }
+        const loadAccountData = () => { const savedData = localStorage.getItem(LS_KEY); if (savedData) { try { const data = JSON.parse(savedData); if (data.address && data.password && data.id) { currentAccount = data; apiToken = null; console.log("Loaded account:", currentAccount.address); return true; } else { console.warn("Invalid localStorage data."); localStorage.removeItem(LS_KEY); } } catch (e) { console.error("Error parsing localStorage:", e); localStorage.removeItem(LS_KEY); } } console.log("No valid account in localStorage."); currentAccount = null; apiToken = null; return false; };
+        const saveAccountData = () => { if (currentAccount?.address && currentAccount?.password && currentAccount?.id) { try { const dataToSave = { address: currentAccount.address, password: currentAccount.password, id: currentAccount.id }; localStorage.setItem(LS_KEY, JSON.stringify(dataToSave)); console.log("Account saved."); } catch (e) { console.error("Error saving to localStorage:", e); showToast("Ошибка сохранения сессии.", "error"); } } };
+        async function getToken() { if (!currentAccount?.address || !currentAccount?.password) { console.error("getToken: Missing credentials."); setInboxState('error', 'Данные аккаунта отсутствуют.'); return false; } if (apiToken) { console.log("Using existing token."); return true; } console.log('Requesting token...'); showLoadingOverlay(true); const result = await fetchAPI('/token', { method: 'POST', needsAuth: false, body: { address: currentAccount.address, password: currentAccount.password } }); showLoadingOverlay(false); if (result.ok && result.data?.token) { apiToken = result.data.token; console.log('Token acquired.'); return true; } else { apiToken = null; const errorMsg = result.error?.message || 'Не удалось получить токен.'; showToast(errorMsg, 'error'); setInboxState('error', 'Ошибка авторизации.'); return false; } }
+        async function createNewAccount() { console.log('Creating new account...'); showLoadingOverlay(true); setInboxState('empty'); updateAccountUI(); const domainsResult = await fetchAPI('/domains', { needsAuth: false }); if (!domainsResult.ok || !domainsResult.data['hydra:member']?.length) { showLoadingOverlay(false); setInboxState('error', 'Не удалось получить домен.'); return false; } const activeDomain = domainsResult.data['hydra:member'].find(d => d.isActive); if (!activeDomain) { showLoadingOverlay(false); setInboxState('error', 'Нет доступных доменов.'); return false; } const username = Math.random().toString(36).substring(2, 10); const password = generatePassword(); const address = `${username}@${activeDomain.domain}`; const createResult = await fetchAPI('/accounts', { method: 'POST', needsAuth: false, body: { address, password } }); if (!createResult.ok || !createResult.data?.id) { showLoadingOverlay(false); setInboxState('error', createResult.error?.message || 'Не удалось создать аккаунт.'); return false; } currentAccount = { address: createResult.data.address, password: password, id: createResult.data.id }; apiToken = null; saveAccountData(); updateAccountUI(); showToast(`Создан адрес: ${currentAccount.address}`, 'success'); console.log("New account created:", currentAccount.address); const gotToken = await getToken(); if(gotToken) { await fetchMessages(); } else { setInboxState('error', 'Аккаунт создан, но ошибка авторизации.'); } showLoadingOverlay(false); return true; }
+        async function fetchMessages() { if (!currentAccount) { setInboxState('error', 'Аккаунт не выбран.'); return; } console.log("Fetching messages..."); if (!apiToken) { if (!(await getToken())) return; } const result = await fetchAPI('/messages?page=1', { needsAuth: true }); if (result.ok) { displayMessages(result.data['hydra:member']); } else { setInboxState('error', result.error?.message || 'Не удалось загрузить сообщения.'); } }
 
         // --- Инициализация приложения ---
-        async function initializeApp() {
-            console.log("Initializing App...");
-            // Настроим тему ТГ
-            if (window.Telegram && window.Telegram.WebApp) {
-                try {
-                    const tg = window.Telegram.WebApp;
-                    tg.ready();
-                    tg.expand();
-                    // Применение цветов темы... (код как раньше)
-                } catch (e) { console.error("Telegram WebApp init error:", e); }
-            }
-
-            // Загружаем или создаем аккаунт
-            if (loadAccountData()) {
-                updateAccountUI();
-                setInboxState('empty'); // Начальное состояние
-                await fetchMessages(); // Пытаемся загрузить сообщения для сохраненного аккаунта
-            } else {
-                // Если нет сохраненных данных, создаем новый
-                await createNewAccount();
-            }
-             // Убедимся, что оверлей скрыт после инициализации
-             showLoadingOverlay(false);
-        }
+        async function initializeApp() { console.log("Initializing App..."); if (window.Telegram && window.Telegram.WebApp) { try { const tg = window.Telegram.WebApp; tg.ready(); tg.expand(); /* Apply theme styles */ document.body.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color); document.body.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color); document.body.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color); document.body.style.setProperty('--tg-theme-link-color', tg.themeParams.link_color); document.body.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color); document.body.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color); document.body.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color); document.body.style.setProperty('--tg-theme-destructive-text-color', tg.themeParams.destructive_text_color); } catch (e) { console.error("Telegram WebApp init error:", e); } } setInboxState('empty'); if (loadAccountData()) { updateAccountUI(); await fetchMessages(); } else { await createNewAccount(); } showLoadingOverlay(false); }
 
         // --- Обработчики событий ---
-        changeEmailBtn.addEventListener('click', () => {
-            if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-            console.log('Change email button clicked.');
-            if (!isLoading) { // Предотвращаем двойное нажатие во время загрузки
-                localStorage.removeItem(LS_KEY); // Удаляем старые данные
-                currentAccount = null;
-                apiToken = null;
-                emailAddressEl.textContent = 'Создание...';
-                emailAddressEl.classList.add('placeholder');
-                createNewAccount(); // Создаем новый
-            } else {
-                 console.log("Ignoring click, already loading.");
-            }
-        });
-
-        refreshInboxBtn.addEventListener('click', () => {
-            if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-             console.log("Refresh button clicked.");
-            if (!currentAccount) { showToast('Сначала создайте или загрузите email.', 'warning'); return; }
-            if (!isLoading) { // Предотвращаем двойное нажатие
-                 fetchMessages();
-            } else {
-                 console.log("Ignoring click, already loading.");
-            }
-        });
-
-        emailDisplayEl.addEventListener('click', () => {
-            if (!currentAccount || !currentAccount.address || emailAddressEl.classList.contains('placeholder')) return;
-            navigator.clipboard.writeText(currentAccount.address)
-                .then(() => showToast('Адрес скопирован!', 'success'))
-                .catch(err => { console.error('Clipboard copy error:', err); showToast('Ошибка копирования адреса.', 'error'); });
-        });
+        changeEmailBtn.addEventListener('click', () => { if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light'); console.log('Change email clicked.'); if (!isLoading) { localStorage.removeItem(LS_KEY); currentAccount = null; apiToken = null; emailAddressEl.textContent = 'Создание...'; emailAddressEl.classList.add('placeholder'); createNewAccount(); } else { console.log("Ignoring click, loading."); } });
+        refreshInboxBtn.addEventListener('click', () => { if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success'); console.log("Refresh clicked."); if (!currentAccount) { showToast('Сначала создайте email.', 'warning'); return; } if (!isLoading) { fetchMessages(); } else { console.log("Ignoring click, loading."); } });
+        emailDisplayEl.addEventListener('click', () => { if (!currentAccount?.address || emailAddressEl.classList.contains('placeholder')) return; navigator.clipboard.writeText(currentAccount.address).then(() => showToast('Адрес скопирован!', 'success')).catch(err => { console.error('Clipboard copy error:', err); showToast('Ошибка копирования.', 'error'); }); });
 
         // --- Запуск ---
         document.addEventListener('DOMContentLoaded', initializeApp);
